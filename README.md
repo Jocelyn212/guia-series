@@ -24,57 +24,61 @@ Una aplicación web moderna para explorar series de televisión, leer análisis 
 
 ### Prerrequisitos
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm (recomendado) o npm
 - Una cuenta de MongoDB Atlas
 
 ### Instalación
 
 1. **Clona el repositorio**
+
    ```bash
    git clone <tu-repo-url>
    cd guia-series
    ```
 
 2. **Instala las dependencias**
+
    ```bash
    pnpm install
    ```
 
 3. **Configura las variables de entorno**
-   
+
    Crea un archivo `.env` en la raíz del proyecto:
+
    ```env
    # MongoDB Atlas Connection String
    MONGODB_URI=mongodb+srv://tu-usuario:tu-password@cluster.mongodb.net/seriesAnalysisDB?retryWrites=true&w=majority
-   
+
    # JWT Secret para autenticación
    JWT_SECRET=tu-secreto-jwt-super-seguro
-   
+
    # Configuración de admin (opcional)
    ADMIN_USERNAME=admin
    ADMIN_PASSWORD=tu-password-admin
    ```
 
 4. **Ejecuta el servidor de desarrollo**
+
    ```bash
    pnpm dev
    ```
 
 5. **Abre tu navegador**
-   
+
    Visita `http://localhost:4323`
 
 ## 🧞 Comandos
 
-| Comando                   | Acción                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`            | Instala las dependencias                        |
-| `pnpm dev`                | Inicia el servidor de desarrollo en `localhost:4323`      |
-| `pnpm build`              | Construye el sitio para producción en `./dist/`          |
-| `pnpm preview`            | Vista previa del build localmente antes de desplegar     |
-| `pnpm astro ...`          | Ejecuta comandos CLI como `astro add`, `astro check` |
-| `pnpm astro -- --help`    | Obtén ayuda usando el CLI de Astro                     |
+| Comando                | Acción                                               |
+| :--------------------- | :--------------------------------------------------- |
+| `pnpm install`         | Instala las dependencias                             |
+| `pnpm dev`             | Inicia el servidor de desarrollo en `localhost:4323` |
+| `pnpm build`           | Construye el sitio para producción en `./dist/`      |
+| `pnpm preview`         | Vista previa del build localmente antes de desplegar |
+| `pnpm astro ...`       | Ejecuta comandos CLI como `astro add`, `astro check` |
+| `pnpm astro -- --help` | Obtén ayuda usando el CLI de Astro                   |
 
 ## � Estructura del Proyecto
 

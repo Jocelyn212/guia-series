@@ -1,18 +1,14 @@
 ---
-// Deshabilitar renderizado en servidor por ahora
-export const prerender = false;
-
 import SerieCard from "../../components/SerieCard";
 import FullAnalysisCard from "../../components/FullAnalysisCard";
 import {
-  getSeries,
   getSerieBySlug,
   getAnalisisBySerie,
-  type Clean,
-  type SerieBase,
-  type AnalisisBase,
 } from "../../lib/mongo";
 import "../../styles/global.css";
+
+// En modo server, no necesitamos getStaticPaths
+// Las rutas se manejan dinámicamente
 
 const { slug } = Astro.params;
 

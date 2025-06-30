@@ -1,7 +1,7 @@
-import type { Clean, SerieBase } from '../lib/mongo'
+import type { Serie } from '../lib/mongo'
 
 interface StatsDisplayProps {
-  series: Clean<SerieBase>[]
+  series: Serie[]
 }
 
 export default function StatsDisplay({ series }: StatsDisplayProps) {

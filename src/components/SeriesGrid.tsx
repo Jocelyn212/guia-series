@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react'
 import SerieCard from './SerieCard'
 import SeriesFilter from './SeriesFilter'
 import SearchBar from './SearchBar'
-import type { Clean, SerieBase } from '../lib/mongo'
+import type { Serie } from '../lib/mongo'
 
 interface SeriesGridProps {
-  initialSeries: Clean<SerieBase>[]
+  initialSeries: Serie[]
 }
 
 export default function SeriesGrid({ initialSeries }: SeriesGridProps) {
-  const [filteredSeries, setFilteredSeries] = useState<Clean<SerieBase>[]>(initialSeries)
+  const [filteredSeries, setFilteredSeries] = useState<Serie[]>(initialSeries)
   const [searchQuery, setSearchQuery] = useState('')
-  const [currentFilter, setCurrentFilter] = useState<Clean<SerieBase>[]>(initialSeries)
+  const [currentFilter, setCurrentFilter] = useState<Serie[]>(initialSeries)
 
   // Aplicar búsqueda sobre las series filtradas
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function SeriesGrid({ initialSeries }: SeriesGridProps) {
     setFilteredSeries(searchResults)
   }, [searchQuery, currentFilter])
 
-  const handleFilteredSeriesChange = (series: Clean<SerieBase>[]) => {
+  const handleFilteredSeriesChange = (series: Serie[]) => {
     setCurrentFilter(series)
     // Si hay búsqueda activa, aplicarla sobre los nuevos resultados filtrados
     if (searchQuery.trim()) {

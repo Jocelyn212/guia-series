@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import type { Clean, SerieBase } from '../lib/mongo'
+import type { Serie } from '../lib/mongo'
 
 interface SeriesFilterProps {
-  series: Clean<SerieBase>[]
-  onFilteredSeriesChange: (filteredSeries: Clean<SerieBase>[]) => void
+  series: Serie[]
+  onFilteredSeriesChange: (filteredSeries: Serie[]) => void
 }
 
 type FilterType = 'all' | 'ongoing' | 'ended' | 'cancelled' | string
