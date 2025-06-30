@@ -1,0 +1,702 @@
+---
+import { getServerAuthUser } from "../../lib/auth";
+
+// Verificar autenticación
+const user = getServerAuthUser(Astro.request);
+
+// Si no está autenticado o no es admin, redirigir al login
+if (!user || user.role !== "admin") {
+  return Astro.redirect("/login");
+}
+
+// Página para gestionar series existentes
+import { getSeries } from "../../lib/mongo";
+
+let series: any[] = [];
+let error = "";
+
+try {
+  series = await getSeries();
+} catch (err) {
+  error = "Error cargando series";
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestionar Series - Admin SeriesGuide</title>
+   
+ </head>
+  <body class="bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-white mb-2">Gestionar Series</h1>
+          <p class="text-gray-400">
+            Edita, elimina y administra las series existentes
+          </p>
+        </div>
+        <div class="flex gap-4">
+          <a
+            href="/admin/add-serie"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            + Nueva Serie
+          </a>
+          <a
+            href="/admin"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            ← Volver
+          </a>
+        </div>
+      </div>
+
+      <!-- Buscador -->
+      <div class="mb-6">
+        <input
+          type="text"
+          id="search"
+          placeholder="Buscar series por título, género, red..."
+          class="w-full bg-gray-800 text-white rounded-lg px-4 py-3 border border-gray-700 focus:border-blue-500 focus:outline-none"
+        />
+      </div>
+
+      <!-- Lista de Series -->
+      {
+        error ? (
+          <div class="bg-red-500 text-white p-4 rounded-lg mb-6">{error}</div>
+        ) : (
+          <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-700">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Serie
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Año
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Rating
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Temporadas
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700" id="seriesTable">
+                  {series.map((serie) => (
+                    <tr
+                      class="hover:bg-gray-700 transition-colors serie-row"
+                      data-serie={JSON.stringify(serie)}
+                    >
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                          {serie.posterUrl && (
+                            <img
+                              class="h-12 w-8 rounded object-cover mr-3"
+                              src={serie.posterUrl}
+                              alt={serie.title}
+                            />
+                          )}
+                          <div>
+                            <div class="text-sm font-medium text-white">
+                              {serie.title}
+                            </div>
+                            <div class="text-sm text-gray-400">
+                              {serie.network}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                              {serie.genre.slice(0, 2).join(", ")}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {serie.startYear}
+                        {serie.endYear && ` - ${serie.endYear}`}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            serie.status === "ongoing"
+                              ? "bg-green-900 text-green-200"
+                              : serie.status === "ended"
+                                ? "bg-blue-900 text-blue-200"
+                                : "bg-red-900 text-red-200"
+                          }`}
+                        >
+                          {serie.status === "ongoing"
+                            ? "En emisión"
+                            : serie.status === "ended"
+                              ? "Finalizada"
+                              : "Cancelada"}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {serie.imdbRating}/10
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {serie.totalSeasons} temp. / {serie.totalEpisodes} ep.
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <div class="flex space-x-2">
+                          <button
+                            data-action="edit"
+                            data-id={serie._id}
+                            class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            data-action="delete"
+                            data-id={serie._id}
+                            data-title={serie.title}
+                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          >
+                            Eliminar
+                          </button>
+                          <a
+                            href={`/series/${serie.slug}`}
+                            target="_blank"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          >
+                            Ver
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      }
+    </div>
+
+    <!-- Modal de Edición -->
+    <div
+      id="editModal"
+      class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50"
+    >
+      <div
+        class="bg-gray-800 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-white">Editar Serie</h2>
+          <button
+            onclick="closeEditModal()"
+            class="text-gray-400 hover:text-white text-2xl">&times;</button
+          >
+        </div>
+
+        <form id="editForm" class="space-y-4">
+          <input type="hidden" id="editId" />
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Título</label
+              >
+              <input
+                type="text"
+                id="editTitle"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Slug</label
+              >
+              <input
+                type="text"
+                id="editSlug"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1"
+              >Descripción</label
+            >
+            <textarea
+              id="editDescription"
+              class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              rows="3"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Red/Canal</label
+              >
+              <input
+                type="text"
+                id="editNetwork"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Estado</label
+              >
+              <select
+                id="editStatus"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              >
+                <option value="ongoing">En emisión</option>
+                <option value="ended">Finalizada</option>
+                <option value="cancelled">Cancelada</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Año inicio</label
+              >
+              <input
+                type="number"
+                id="editStartYear"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Año fin</label
+              >
+              <input
+                type="number"
+                id="editEndYear"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Temporadas</label
+              >
+              <input
+                type="number"
+                id="editTotalSeasons"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Episodios</label
+              >
+              <input
+                type="number"
+                id="editTotalEpisodes"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >IMDB ID</label
+              >
+              <input
+                type="text"
+                id="editImdbId"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >Rating IMDB</label
+              >
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                id="editImdbRating"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >URL Poster</label
+              >
+              <input
+                type="url"
+                id="editPosterUrl"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1"
+                >URL Backdrop</label
+              >
+              <input
+                type="url"
+                id="editBackdropUrl"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onclick="closeEditModal()"
+              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-medium transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition-colors"
+            >
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // @ts-nocheck - JavaScript puro sin tipos
+
+      // Event delegation para los botones
+      document.addEventListener("click", function (e) {
+        if (e.target.dataset.action === "edit") {
+          editSerie(e.target.dataset.id);
+        } else if (e.target.dataset.action === "delete") {
+          deleteSerie(e.target.dataset.id, e.target.dataset.title);
+        }
+      });
+
+      // Búsqueda en tiempo real
+      document.getElementById("search").addEventListener("input", function (e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll(".serie-row");
+
+        rows.forEach((row) => {
+          const serieData = JSON.parse(row.dataset.serie);
+          const searchText =
+            `${serieData.title} ${serieData.network} ${serieData.genre.join(" ")}`.toLowerCase();
+
+          if (searchText.includes(searchTerm)) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      });
+
+      // Funciones de gestión
+      function editSerie(id) {
+        const rows = document.querySelectorAll(".serie-row");
+        let serieData = null;
+
+        rows.forEach((row) => {
+          const data = JSON.parse(row.dataset.serie);
+          if (data._id === id) {
+            serieData = data;
+          }
+        });
+
+        if (!serieData) return;
+
+        // Llenar el formulario de edición
+        document.getElementById("editId").value = serieData._id;
+        document.getElementById("editTitle").value = serieData.title;
+        document.getElementById("editSlug").value = serieData.slug;
+        document.getElementById("editDescription").value =
+          serieData.description || "";
+        document.getElementById("editNetwork").value = serieData.network || "";
+        document.getElementById("editStatus").value = serieData.status;
+        document.getElementById("editStartYear").value = serieData.startYear;
+        document.getElementById("editEndYear").value = serieData.endYear || "";
+        document.getElementById("editTotalSeasons").value =
+          serieData.totalSeasons;
+        document.getElementById("editTotalEpisodes").value =
+          serieData.totalEpisodes;
+        document.getElementById("editImdbId").value = serieData.imdbId || "";
+        document.getElementById("editImdbRating").value =
+          serieData.imdbRating || "";
+        document.getElementById("editPosterUrl").value =
+          serieData.posterUrl || "";
+        document.getElementById("editBackdropUrl").value =
+          serieData.backdropUrl || "";
+
+        // Mostrar modal
+        document.getElementById("editModal").classList.add("active");
+      }
+
+      function closeEditModal() {
+        document.getElementById("editModal").classList.remove("active");
+      }
+
+      function deleteSerie(id, title) {
+        if (
+          !confirm(
+            `¿Estás seguro de que quieres eliminar la serie "${title}"? Esta acción no se puede deshacer.`
+          )
+        ) {
+          return;
+        }
+
+        fetch("/api/series", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              alert("Serie eliminada exitosamente");
+              location.reload();
+            } else {
+              alert(
+                "Error eliminando la serie: " +
+                  (data.error || "Error desconocido")
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Error eliminando la serie");
+          });
+      }
+
+      // Manejar envío del formulario de edición
+      document
+        .getElementById("editForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(e.target);
+          const data = {
+            id: document.getElementById("editId").value,
+            title: document.getElementById("editTitle").value,
+            slug: document.getElementById("editSlug").value,
+            description: document.getElementById("editDescription").value,
+            network: document.getElementById("editNetwork").value,
+            status: document.getElementById("editStatus").value,
+            startYear: document.getElementById("editStartYear").value,
+            endYear: document.getElementById("editEndYear").value,
+            totalSeasons: document.getElementById("editTotalSeasons").value,
+            totalEpisodes: document.getElementById("editTotalEpisodes").value,
+            imdbId: document.getElementById("editImdbId").value,
+            imdbRating: document.getElementById("editImdbRating").value,
+            posterUrl: document.getElementById("editPosterUrl").value,
+            backdropUrl: document.getElementById("editBackdropUrl").value,
+          };
+
+          fetch("/api/series", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Serie actualizada exitosamente");
+                location.reload();
+              } else {
+                alert(
+                  "Error actualizando la serie: " +
+                    (data.error || "Error desconocido")
+                );
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("Error actualizando la serie");
+            });
+        });
+
+      // Auto-generar slug al cambiar el título
+      document
+        .getElementById("editTitle")
+        .addEventListener("input", function (e) {
+          const title = e.target.value;
+          const slug = title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
+            .trim();
+          document.getElementById("editSlug").value = slug;
+        });
+
+      // Cerrar modal al hacer clic fuera de él
+      document
+        .getElementById("editModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeEditModal();
+          }
+        });
+    </script>
+  </body>
+</html>
+<div class="stat-label">Finalizadas</div>
+
+<div class="stat-card">
+  <div class="stat-number">
+    {
+      Math.round(
+        (series.reduce((acc, s) => acc + s.imdbRating, 0) / series.length) * 10
+      ) / 10
+    }
+  </div>
+  <div class="stat-label">Rating Promedio</div>
+</div>
+
+<div class="search-bar">
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Buscar series..."
+    id="searchInput"
+  />
+</div>
+
+<div class="series-grid" id="seriesGrid">
+  {
+    series.map((serie) => (
+      <div class="serie-card" data-title={serie.title.toLowerCase()}>
+        {serie.posterUrl ? (
+          <img
+            src={serie.posterUrl}
+            alt={serie.title}
+            class="serie-poster"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          />
+        ) : null}
+        <div class="no-image" style="display: none;">
+          📺
+        </div>
+
+        <div class="serie-info">
+          <div class="serie-title">{serie.title}</div>
+          <div class="serie-meta">
+            {serie.startYear}
+            {serie.endYear ? ` - ${serie.endYear}` : ""} •{serie.network} • ⭐{" "}
+            {serie.imdbRating}
+          </div>
+          <div class="serie-meta">
+            {serie.totalSeasons} temporada{serie.totalSeasons !== 1 ? "s" : ""}{" "}
+            •{serie.totalEpisodes} episodios •
+            <span
+              style={`color: ${
+                serie.status === "ongoing"
+                  ? "#28a745"
+                  : serie.status === "ended"
+                    ? "#6c757d"
+                    : "#dc3545"
+              }`}
+            >
+              {serie.status === "ongoing"
+                ? "En emisión"
+                : serie.status === "ended"
+                  ? "Finalizada"
+                  : "Cancelada"}
+            </span>
+          </div>
+          <div class="serie-genres">
+            {serie.genre.map((g: string) => (
+              <span class="genre-tag">{g}</span>
+            ))}
+          </div>
+          <div class="serie-actions">
+            <a
+              href={`/series/${serie.slug}`}
+              class="btn-small btn-view"
+              target="_blank"
+            >
+              Ver
+            </a>
+            <button
+              class="btn-small btn-edit"
+              onclick={`editSerie('${serie.slug}')`}
+            >
+              Editar
+            </button>
+            <button
+              class="btn-small btn-delete"
+              onclick={`deleteSerie('${serie.slug}', '${serie.title}')`}
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  // Búsqueda en tiempo real
+  const searchInput = document.getElementById(
+    "searchInput"
+  ) as HTMLInputElement;
+  const seriesGrid = document.getElementById("seriesGrid");
+
+  if (searchInput && seriesGrid) {
+    searchInput.addEventListener("input", function (e) {
+      const target = e.target as HTMLInputElement;
+      const searchTerm = target.value.toLowerCase();
+      const cards = seriesGrid.querySelectorAll(".serie-card");
+
+      cards.forEach((card) => {
+        const title = (card as HTMLElement).dataset.title || "";
+        if (title.includes(searchTerm)) {
+          (card as HTMLElement).style.display = "block";
+        } else {
+          (card as HTMLElement).style.display = "none";
+        }
+      });
+    });
+  }
+
+  // Funciones de administración
+  function editSerie(slug: string) {
+    // Aquí se puede implementar un modal de edición o redirección
+    alert(`Función de edición para "${slug}" - Por implementar`);
+  }
+
+  function deleteSerie(slug: string, title: string) {
+    if (confirm(`¿Estás seguro de que quieres eliminar la serie "${title}"?`)) {
+      // Aquí se implementaría la eliminación
+      alert(`Eliminación de "${title}" - Por implementar`);
+    }
+  }
+</script>

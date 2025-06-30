@@ -1,0 +1,133 @@
+---
+import SerieCard from "../components/SerieCard";
+import { getSeries, type Clean, type SerieBase } from "../lib/mongo";
+import "../styles/global.css";
+
+// Obtiene todas las series desde MongoDB
+const seriesData = await getSeries();
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Series - Análisis de Series</title>
+    <meta
+      name="description"
+      content="Descubre análisis detallados de las mejores series de TV: Game of Thrones, Stranger Things, Fringe y más."
+    />
+  </head>
+  <body class="bg-gray-50">
+    {/* Navigation */}
+    <nav class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/" class="text-xl font-bold text-blue-600"
+              >📺 SeriesGuide</a
+            >
+          </div>
+          <div class="flex items-center space-x-4">
+            <a
+              href="/"
+              class="text-gray-600 hover:text-blue-600 transition-colors"
+              >Inicio</a
+            >
+            <a href="/series" class="text-blue-600 font-medium">Series</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">
+          Catálogo de Series
+        </h1>
+        <p class="text-gray-600 text-lg">
+          Explora análisis detallados de las series más populares y aclamadas de
+          la televisión moderna.
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="text-3xl font-bold text-blue-600">
+            {seriesData.length}
+          </div>
+          <div class="text-gray-600">Series Analizadas</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="text-3xl font-bold text-green-600">
+            {seriesData.filter((s) => s.status === "ongoing").length}
+          </div>
+          <div class="text-gray-600">En Emisión</div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <div class="text-3xl font-bold text-purple-600">
+            {
+              seriesData.reduce(
+                (total, serie) => total + serie.platforms.length,
+                0
+              )
+            }
+          </div>
+          <div class="text-gray-600">Plataformas Disponibles</div>
+        </div>
+      </div>
+
+      {/* Series Grid */}
+      <div
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        {
+          seriesData.map((serie) => (
+            <SerieCard
+              title={serie.title}
+              description={serie.description}
+              genre={serie.genre}
+              network={serie.network}
+              startYear={serie.startYear}
+              endYear={serie.endYear}
+              status={serie.status}
+              imdbRating={serie.imdbRating}
+              posterUrl={serie.posterUrl}
+              platforms={serie.platforms}
+              slug={serie.slug}
+            />
+          ))
+        }
+      </div>
+
+      {/* Empty State */}
+      {
+        seriesData.length === 0 && (
+          <div class="text-center py-12">
+            <div class="text-6xl mb-4">📺</div>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">
+              No hay series disponibles
+            </h3>
+            <p class="text-gray-500">
+              Ejecuta el script de población de datos para agregar series.
+            </p>
+          </div>
+        )
+      }
+    </main>
+
+    {/* Footer */}
+    <footer class="bg-gray-800 text-white mt-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center">
+          <p>
+            &copy; 2024 SeriesGuide. Análisis profesional de series de
+            televisión.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

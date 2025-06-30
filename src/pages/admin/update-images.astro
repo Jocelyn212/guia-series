@@ -1,0 +1,492 @@
+---
+import { getServerAuthUser } from "../../lib/auth";
+
+// Verificar autenticación
+const user = getServerAuthUser(Astro.request);
+
+// Si no está autenticado o no es admin, redirigir al login
+if (!user || user.role !== "admin") {
+  return Astro.redirect("/login");
+}
+
+// Página para actualizar imágenes de series
+import { connectMongoDB, getSeries } from "../../lib/mongo";
+
+let success = false;
+let error = "";
+let series: any[] = [];
+
+try {
+  series = await getSeries();
+} catch (err) {
+  error = "Error cargando series";
+}
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const serieSlug = formData.get("serieSlug") as string;
+    const posterUrl = formData.get("posterUrl") as string;
+    const backdropUrl = formData.get("backdropUrl") as string;
+
+    const { seriesCollection } = await connectMongoDB();
+    await seriesCollection.updateOne(
+      { slug: serieSlug },
+      {
+        $set: {
+          posterUrl,
+          backdropUrl,
+          updatedAt: new Date(),
+        },
+      }
+    );
+    success = true;
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Error desconocido";
+  }
+}
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Actualizar Imágenes - Admin SeriesGuide</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .content {
+        padding: 2rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      select,
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      select:focus,
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        margin-right: 1rem;
+      }
+
+      .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .back-link {
+        position: absolute;
+        top: 2rem;
+        left: 2rem;
+        color: white;
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        backdrop-filter: blur(10px);
+      }
+
+      .preview-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .preview-box {
+        border: 2px dashed #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      .preview-image {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .preview-placeholder {
+        color: #6c757d;
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .preview-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+      }
+
+      .series-info {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .current-images {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .current-poster {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .current-info h4 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .current-info p {
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+      }
+
+      .url-input-group {
+        position: relative;
+      }
+
+      .url-test-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/admin" class="back-link">← Volver al panel</a>
+
+    <div class="container">
+      <div class="header">
+        <h1>🖼️ Actualizar Imágenes</h1>
+        <p>Actualiza las URLs de posters y backdrops de las series</p>
+      </div>
+
+      <div class="content">
+        {
+          success && (
+            <div class="alert alert-success">
+              ✅ ¡Imágenes actualizadas exitosamente!
+            </div>
+          )
+        }
+
+        {error && <div class="alert alert-error">❌ Error: {error}</div>}
+
+        <form method="POST">
+          <div class="form-group">
+            <label for="serieSlug">Seleccionar Serie*</label>
+            <select id="serieSlug" name="serieSlug" required>
+              <option value="">Selecciona una serie...</option>
+              {
+                series.map((serie) => (
+                  <option
+                    value={serie.slug}
+                    data-poster={serie.posterUrl}
+                    data-backdrop={serie.backdropUrl}
+                    data-title={serie.title}
+                    data-year={serie.startYear}
+                    data-network={serie.network}
+                  >
+                    {serie.title} ({serie.startYear})
+                  </option>
+                ))
+              }
+            </select>
+          </div>
+
+          <div id="currentInfo" class="series-info" style="display: none;">
+            <h3>Información Actual</h3>
+            <div class="current-images">
+              <img
+                id="currentPoster"
+                class="current-poster"
+                alt="Poster actual"
+                style="display: none;"
+              />
+              <div class="current-info">
+                <h4 id="currentTitle"></h4>
+                <p><strong>Año:</strong> <span id="currentYear"></span></p>
+                <p>
+                  <strong>Network:</strong>
+                  <span id="currentNetwork"></span>
+                </p>
+                <p>
+                  <strong>Poster actual:</strong>
+                  <span
+                    id="currentPosterUrl"
+                    style="font-size: 0.875rem; word-break: break-all;"></span>
+                </p>
+                <p>
+                  <strong>Backdrop actual:</strong>
+                  <span
+                    id="currentBackdropUrl"
+                    style="font-size: 0.875rem; word-break: break-all;"></span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="posterUrl">Nueva URL del Poster*</label>
+            <div class="url-input-group">
+              <input
+                type="url"
+                id="posterUrl"
+                name="posterUrl"
+                required
+                placeholder="https://ejemplo.com/poster.jpg"
+              />
+              <button
+                type="button"
+                class="url-test-btn"
+                onclick="testImage('posterUrl', 'posterPreview')">Test</button
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="backdropUrl">Nueva URL del Backdrop</label>
+            <div class="url-input-group">
+              <input
+                type="url"
+                id="backdropUrl"
+                name="backdropUrl"
+                placeholder="https://ejemplo.com/backdrop.jpg"
+              />
+              <button
+                type="button"
+                class="url-test-btn"
+                onclick="testImage('backdropUrl', 'backdropPreview')"
+                >Test</button
+              >
+            </div>
+          </div>
+
+          <div class="preview-container">
+            <div class="preview-box">
+              <div id="posterPreview">
+                <div class="preview-placeholder">📷</div>
+                <div class="preview-label">Vista previa del poster</div>
+              </div>
+            </div>
+            <div class="preview-box">
+              <div id="backdropPreview">
+                <div class="preview-placeholder">🖼️</div>
+                <div class="preview-label">Vista previa del backdrop</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem;">
+            <a href="/admin" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn">Actualizar Imágenes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Mostrar información actual cuando se selecciona una serie
+      const serieSelector = document.getElementById(
+        "serieSlug"
+      ) as HTMLSelectElement;
+      const currentInfo = document.getElementById("currentInfo");
+      const posterInput = document.getElementById(
+        "posterUrl"
+      ) as HTMLInputElement;
+      const backdropInput = document.getElementById(
+        "backdropUrl"
+      ) as HTMLInputElement;
+
+      if (serieSelector) {
+        serieSelector.addEventListener("change", function (e) {
+          const target = e.target as HTMLSelectElement;
+          const option = target.options[target.selectedIndex];
+
+          if (target.value && currentInfo) {
+            // Mostrar información actual
+            currentInfo.style.display = "block";
+
+            const title = option.dataset.title || "";
+            const year = option.dataset.year || "";
+            const network = option.dataset.network || "";
+            const posterUrl = option.dataset.poster || "";
+            const backdropUrl = option.dataset.backdrop || "";
+
+            document.getElementById("currentTitle")!.textContent = title;
+            document.getElementById("currentYear")!.textContent = year;
+            document.getElementById("currentNetwork")!.textContent = network;
+            document.getElementById("currentPosterUrl")!.textContent =
+              posterUrl || "Sin poster";
+            document.getElementById("currentBackdropUrl")!.textContent =
+              backdropUrl || "Sin backdrop";
+
+            // Mostrar poster actual si existe
+            const currentPoster = document.getElementById(
+              "currentPoster"
+            ) as HTMLImageElement;
+            if (posterUrl) {
+              currentPoster.src = posterUrl;
+              currentPoster.style.display = "block";
+            } else {
+              currentPoster.style.display = "none";
+            }
+
+            // Pre-llenar campos si existen URLs actuales
+            if (posterInput) posterInput.value = posterUrl;
+            if (backdropInput) backdropInput.value = backdropUrl;
+          } else if (currentInfo) {
+            currentInfo.style.display = "none";
+          }
+        });
+      }
+
+      // Función para probar imágenes
+      function testImage(inputId: string, previewId: string) {
+        const input = document.getElementById(inputId) as HTMLInputElement;
+        const preview = document.getElementById(previewId);
+
+        if (input && preview && input.value) {
+          const img = document.createElement("img");
+          img.className = "preview-image";
+          img.onload = function () {
+            preview.innerHTML = "";
+            preview.appendChild(img);
+          };
+          img.onerror = function () {
+            preview.innerHTML = `
+                        <div class="preview-placeholder" style="color: #dc3545;">❌</div>
+                        <div class="preview-label" style="color: #dc3545;">Error cargando imagen</div>
+                    `;
+          };
+          img.src = input.value;
+        } else {
+          alert("Ingresa una URL primero");
+        }
+      }
+
+      // Auto-test cuando se cambia la URL
+      if (posterInput) {
+        posterInput.addEventListener("blur", function () {
+          if (this.value) {
+            testImage("posterUrl", "posterPreview");
+          }
+        });
+      }
+
+      if (backdropInput) {
+        backdropInput.addEventListener("blur", function () {
+          if (this.value) {
+            testImage("backdropUrl", "backdropPreview");
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

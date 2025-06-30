@@ -1,0 +1,199 @@
+---
+// Deshabilitar renderizado en servidor por ahora
+export const prerender = false;
+
+import SerieCard from "../../components/SerieCard";
+import FullAnalysisCard from "../../components/FullAnalysisCard";
+import {
+  getSeries,
+  getSerieBySlug,
+  getAnalisisBySerie,
+  type Clean,
+  type SerieBase,
+  type AnalisisBase,
+} from "../../lib/mongo";
+import "../../styles/global.css";
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/404");
+}
+
+const serie = await getSerieBySlug(slug);
+const analisis = await getAnalisisBySerie(slug);
+
+if (!serie) {
+  return Astro.redirect("/404");
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{serie.title} - Análisis | SeriesGuide</title>
+    <meta
+      name="description"
+      content={`Análisis detallados de ${serie.title}. ${serie.description}`}
+    />
+  </head>
+  <body class="bg-gray-50">
+    {/* Navigation */}
+    <nav class="bg-white shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/" class="text-xl font-bold text-blue-600"
+              >📺 SeriesGuide</a
+            >
+          </div>
+          <div class="flex items-center space-x-4">
+            <a
+              href="/"
+              class="text-gray-600 hover:text-blue-600 transition-colors"
+              >Series</a
+            >
+            <a
+              href="/analisis"
+              class="text-gray-600 hover:text-blue-600 transition-colors"
+              >Análisis</a
+            >
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Serie Header */}
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="md:flex">
+          <div class="md:w-1/3">
+            {
+              serie.posterUrl ? (
+                <img
+                  src={serie.posterUrl}
+                  alt={serie.title}
+                  class="w-full h-64 md:h-full object-cover"
+                />
+              ) : (
+                <div class="w-full h-64 md:h-full bg-gray-200 flex items-center justify-center">
+                  <span class="text-6xl">🎬</span>
+                </div>
+              )
+            }
+          </div>
+          <div class="md:w-2/3 p-8">
+            <div class="flex items-center gap-4 mb-4">
+              <h1 class="text-3xl font-bold text-gray-800">{serie.title}</h1>
+              <span
+                class="bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold"
+              >
+                ⭐ {serie.imdbRating}
+              </span>
+            </div>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+              {
+                serie.genre.map((g) => (
+                  <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm font-medium">
+                    {g}
+                  </span>
+                ))
+              }
+            </div>
+
+            <p class="text-gray-600 mb-4">{serie.description}</p>
+
+            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
+              <div><strong>Red:</strong> {serie.network}</div>
+              <div>
+                <strong>Años:</strong>
+                {serie.startYear}{serie.endYear ? `-${serie.endYear}` : ""}
+              </div>
+              <div><strong>Temporadas:</strong> {serie.totalSeasons}</div>
+              <div><strong>Episodios:</strong> {serie.totalEpisodes}</div>
+            </div>
+
+            <div class="mb-4">
+              <p class="text-sm text-gray-500 mb-2">Disponible en:</p>
+              <div class="flex flex-wrap gap-2">
+                {
+                  serie.platforms.map((platform) => (
+                    <span
+                      class={`px-3 py-1 rounded-md text-sm font-medium ${
+                        platform.isPremium
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {platform.name}
+                      {platform.isPremium && " 💎"}
+                    </span>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Análisis Section */}
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          Análisis de {serie.title}
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Análisis detallados de episodios, teorías y interpretaciones de esta
+          serie.
+        </p>
+
+        {
+          analisis.length > 0 ? (
+            <div class="space-y-8">
+              {analisis.map((item) => (
+                <FullAnalysisCard
+                  client:load
+                  title={item.title}
+                  excerpt={item.excerpt}
+                  content={item.content}
+                  universe={item.universe || "blue"}
+                  author={item.author}
+                  readTime={item.readTime}
+                  views={item.views}
+                  likes={item.likes}
+                  publishedAt={item.publishedAt}
+                  slug={item.slug}
+                />
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-12 bg-white rounded-lg">
+              <div class="text-6xl mb-4">📝</div>
+              <h3 class="text-xl font-semibold text-gray-600 mb-2">
+                Análisis próximamente
+              </h3>
+              <p class="text-gray-500">
+                Estamos preparando análisis detallados de {serie.title}. ¡Vuelve
+                pronto!
+              </p>
+            </div>
+          )
+        }
+      </div>
+    </main>
+
+    {/* Footer */}
+    <footer class="bg-gray-800 text-white mt-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center">
+          <p>
+            &copy; 2024 SeriesGuide. Análisis profesional de series de
+            televisión.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

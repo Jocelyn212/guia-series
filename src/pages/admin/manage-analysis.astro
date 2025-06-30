@@ -1,0 +1,318 @@
+---
+import { getServerAuthUser } from "../../lib/auth";
+
+// Verificar autenticación
+const user = getServerAuthUser(Astro.request);
+
+// Si no está autenticado o no es admin, redirigir al login
+if (!user || user.role !== "admin") {
+  return Astro.redirect("/login");
+}
+
+// Página para gestionar análisis existentes
+import { getAnalisis } from "../../lib/mongo";
+
+let analysis: any[] = [];
+let error = "";
+
+try {
+  // Obtener todos los análisis, incluyendo borradores
+  analysis = await getAnalisis();
+} catch (err) {
+  error = "Error cargando análisis";
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestionar Análisis - Admin SeriesGuide</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <style>
+      .modal {
+        display: none;
+      }
+      .modal.active {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-white mb-2">Gestionar Análisis</h1>
+          <p class="text-gray-400">
+            Edita, elimina y administra los análisis existentes
+          </p>
+        </div>
+        <div class="flex gap-4">
+          <a
+            href="/admin/add-analysis"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            + Nuevo Análisis
+          </a>
+          <a
+            href="/admin"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            ← Volver
+          </a>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Total Análisis</h3>
+          <p class="text-3xl font-bold text-white">{analysis.length}</p>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Publicados</h3>
+          <p class="text-3xl font-bold text-green-400">
+            {analysis.filter((a) => a.status === "published").length}
+          </p>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Borradores</h3>
+          <p class="text-3xl font-bold text-yellow-400">
+            {analysis.filter((a) => a.status === "draft").length}
+          </p>
+        </div>
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+          <h3 class="text-sm font-medium text-gray-400 mb-2">Total Vistas</h3>
+          <p class="text-3xl font-bold text-blue-400">
+            {analysis.reduce((sum, a) => sum + (a.views || 0), 0)}
+          </p>
+        </div>
+      </div>
+
+      <!-- Buscador -->
+      <div class="mb-6">
+        <input
+          type="text"
+          id="search"
+          placeholder="Buscar análisis por título, contenido, tags..."
+          class="w-full bg-gray-800 text-white rounded-lg px-4 py-3 border border-gray-700 focus:border-blue-500 focus:outline-none"
+        />
+      </div>
+
+      <!-- Lista de Análisis -->
+      {
+        error ? (
+          <div class="bg-red-500 text-white p-4 rounded-lg mb-6">{error}</div>
+        ) : (
+          <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-700">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Análisis
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Fecha
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Vistas
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Likes
+                    </th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700" id="analysisTable">
+                  {analysis.map((analisis) => (
+                    <tr
+                      class="hover:bg-gray-700 transition-colors analysis-row"
+                      data-analysis={JSON.stringify(analisis)}
+                    >
+                      <td class="px-6 py-4">
+                        <div>
+                          <div class="text-sm font-medium text-white">
+                            {analisis.title}
+                          </div>
+                          <div class="text-sm text-gray-400">
+                            {analisis.excerpt
+                              ? analisis.excerpt.substring(0, 100) + "..."
+                              : "Sin extracto"}
+                          </div>
+                          <div class="flex flex-wrap gap-1 mt-1">
+                            {analisis.tags &&
+                              analisis.tags
+                                .slice(0, 3)
+                                .map((tag: string) => (
+                                  <span class="bg-blue-900 text-blue-200 px-2 py-1 text-xs rounded">
+                                    {tag}
+                                  </span>
+                                ))}
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            analisis.status === "published"
+                              ? "bg-green-900 text-green-200"
+                              : "bg-yellow-900 text-yellow-200"
+                          }`}
+                        >
+                          {analisis.status === "published"
+                            ? "Publicado"
+                            : "Borrador"}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {new Date(analisis.createdAt).toLocaleDateString(
+                          "es-ES"
+                        )}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {analisis.views || 0}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        {analisis.likes || 0}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <div class="flex space-x-2">
+                          <button
+                            data-action="edit"
+                            data-id={analisis._id}
+                            class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            data-action="delete"
+                            data-id={analisis._id}
+                            data-title={analisis.title}
+                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          >
+                            Eliminar
+                          </button>
+                          <a
+                            href={`/analisis#${analisis.slug}`}
+                            target="_blank"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                          >
+                            Ver
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      }
+    </div>
+
+    <script is:inline>
+      // Event delegation para los botones
+      document.addEventListener("click", function (e) {
+        const target = e.target;
+        if (target && target.dataset) {
+          if (target.dataset.action === "edit") {
+            editAnalysis(target.dataset.id);
+          } else if (target.dataset.action === "delete") {
+            deleteAnalysis(target.dataset.id, target.dataset.title);
+          }
+        }
+      });
+
+      // Búsqueda en tiempo real
+      const searchInput = document.getElementById("search");
+      if (searchInput) {
+        searchInput.addEventListener("input", function (e) {
+          const target = e.target;
+          if (target && target.value !== undefined) {
+            const searchTerm = target.value.toLowerCase();
+            const rows = document.querySelectorAll(".analysis-row");
+
+            rows.forEach((row) => {
+              try {
+                const analysisData = JSON.parse(row.dataset.analysis || "{}");
+                const searchText =
+                  `${analysisData.title || ""} ${analysisData.content || ""} ${(analysisData.tags || []).join(" ")} ${analysisData.excerpt || ""}`.toLowerCase();
+
+                if (searchText.includes(searchTerm)) {
+                  row.style.display = "";
+                } else {
+                  row.style.display = "none";
+                }
+              } catch (error) {
+                console.error("Error parsing analysis data:", error);
+              }
+            });
+          }
+        });
+      }
+
+      function editAnalysis(id) {
+        if (!id) {
+          alert("Error: ID de análisis no válido");
+          return;
+        }
+        // Por ahora solo mostrar alerta, luego se puede implementar modal
+        alert(`Función de edición para análisis ID: ${id} - Por implementar`);
+      }
+
+      function deleteAnalysis(id, title) {
+        if (!id) {
+          alert("Error: ID de análisis no válido");
+          return;
+        }
+
+        if (
+          !confirm(
+            `¿Estás seguro de que quieres eliminar el análisis "${title || "Sin título"}"? Esta acción no se puede deshacer.`
+          )
+        ) {
+          return;
+        }
+
+        fetch("/api/analysis", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.success) {
+              alert("Análisis eliminado exitosamente");
+              location.reload();
+            } else {
+              alert(
+                "Error eliminando el análisis: " +
+                  (data.error || "Error desconocido")
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Error eliminando el análisis: " + error.message);
+          });
+      }
+    </script>
+  </body>
+</html>

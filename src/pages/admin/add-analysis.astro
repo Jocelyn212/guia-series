@@ -1,0 +1,531 @@
+---
+import { getServerAuthUser } from "../../lib/auth";
+
+// Verificar autenticación
+const user = getServerAuthUser(Astro.request);
+
+// Si no está autenticado o no es admin, redirigir al login
+if (!user || user.role !== "admin") {
+  return Astro.redirect("/login");
+}
+
+// Página para agregar nuevos análisis
+import { connectMongoDB, getSeries } from "../../lib/mongo";
+
+let success = false;
+let error = "";
+let series: any[] = [];
+
+// Obtener todas las series para el selector
+try {
+  series = await getSeries();
+} catch (err) {
+  error = "Error cargando series";
+}
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+
+    const newAnalysis = {
+      title: formData.get("title") as string,
+      slug: formData.get("slug") as string,
+      content: formData.get("content") as string,
+      excerpt: formData.get("excerpt") as string,
+      universe: formData.get("universe") as "blue" | "red" | undefined,
+      tags: (formData.get("tags") as string).split(",").map((t) => t.trim()),
+      author: {
+        name: formData.get("authorName") as string,
+        avatar: formData.get("authorAvatar") as string,
+      },
+      status: "published" as const,
+      readTime: parseInt(formData.get("readTime") as string),
+      views: parseInt(formData.get("views") as string) || 0,
+      likes: parseInt(formData.get("likes") as string) || 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      publishedAt: new Date(),
+    };
+
+    const { analysisCollection } = await connectMongoDB();
+    await analysisCollection.insertOne(newAnalysis);
+    success = true;
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Error desconocido";
+  }
+}
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crear Análisis - Admin SeriesGuide</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .form-container {
+        padding: 2rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      textarea {
+        min-height: 300px;
+        resize: vertical;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .form-row-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        margin-right: 1rem;
+      }
+
+      .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .back-link {
+        position: absolute;
+        top: 2rem;
+        left: 2rem;
+        color: white;
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        backdrop-filter: blur(10px);
+      }
+
+      .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+      }
+
+      .preview-btn {
+        background: #28a745;
+        margin-left: 1rem;
+      }
+
+      .markdown-help {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .series-selector {
+        margin-bottom: 1rem;
+      }
+
+      .quick-fill {
+        background: #e3f2fd;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .quick-fill h4 {
+        margin-bottom: 0.5rem;
+        color: #1565c0;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/admin" class="back-link">← Volver al panel</a>
+
+    <div class="container">
+      <div class="header">
+        <h1>📖 Crear Nuevo Análisis</h1>
+        <p>Escribe un análisis detallado para una serie</p>
+      </div>
+
+      <div class="form-container">
+        {
+          success && (
+            <div class="alert alert-success">
+              ✅ ¡Análisis creado exitosamente!
+            </div>
+          )
+        }
+
+        {error && <div class="alert alert-error">❌ Error: {error}</div>}
+
+        <div class="quick-fill">
+          <h4>🎯 Selección Rápida de Serie</h4>
+          <div class="series-selector">
+            <select id="serieSelector">
+              <option value=""
+                >Seleccionar una serie para autocompletar...</option
+              >
+              {
+                series.map((serie) => (
+                  <option value={serie.slug} data-title={serie.title}>
+                    {serie.title} ({serie.startYear})
+                  </option>
+                ))
+              }
+            </select>
+          </div>
+        </div>
+
+        <form method="POST">
+          <div class="form-group">
+            <label for="title">Título del Análisis*</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              required
+              placeholder="Ej: La Complejidad Moral de Walter White"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="slug">Slug (URL amigable)*</label>
+            <input
+              type="text"
+              id="slug"
+              name="slug"
+              required
+              placeholder="Ej: complejidad-moral-walter-white"
+            />
+            <div class="help-text">
+              Sin espacios, solo letras minúsculas y guiones
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="excerpt">Extracto/Resumen*</label>
+            <textarea
+              id="excerpt"
+              name="excerpt"
+              required
+              style="min-height: 80px;"
+              placeholder="Breve descripción del análisis (1-2 frases)"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="content">Contenido del Análisis (Markdown)*</label>
+            <textarea
+              id="content"
+              name="content"
+              required
+              placeholder="# Título Principal
+
+## Subtítulo
+
+Escribe aquí tu análisis completo usando **Markdown**...
+
+### Otro Subtítulo
+
+Puedes usar:
+- **Negrita**
+- *Cursiva*
+- [Enlaces](https://example.com)
+- Listas
+- Y mucho más..."
+            ></textarea>
+            <div class="markdown-help">
+              <strong>Ayuda de Markdown:</strong>
+              # Título | ## Subtítulo | **negrita** | *cursiva* | [enlace](url) |
+              - lista
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tags">Tags/Etiquetas*</label>
+              <input
+                type="text"
+                id="tags"
+                name="tags"
+                required
+                placeholder="breaking-bad, drama, antihero"
+              />
+              <div class="help-text">
+                Separados por comas. Incluye el slug de la serie.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="universe">Universo (Opcional)</label>
+              <select id="universe" name="universe">
+                <option value="">Sin universo específico</option>
+                <option value="blue">Universo Azul</option>
+                <option value="red">Universo Rojo</option>
+              </select>
+              <div class="help-text">Para series como Fringe</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="authorName">Nombre del Autor*</label>
+              <input
+                type="text"
+                id="authorName"
+                name="authorName"
+                required
+                placeholder="Dr. Elena Martínez"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="authorAvatar">Avatar del Autor</label>
+              <input
+                type="url"
+                id="authorAvatar"
+                name="authorAvatar"
+                placeholder="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+              />
+              <div class="help-text">
+                URL opcional del avatar del autor (recomendado: Unsplash o
+                similar)
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="form-group">
+              <label for="readTime">Tiempo de Lectura (min)*</label>
+              <input
+                type="number"
+                id="readTime"
+                name="readTime"
+                required
+                min="1"
+                placeholder="12"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="views">Views Iniciales</label>
+              <input
+                type="number"
+                id="views"
+                name="views"
+                min="0"
+                placeholder="1250"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="likes">Likes Iniciales</label>
+              <input
+                type="number"
+                id="likes"
+                name="likes"
+                min="0"
+                placeholder="67"
+              />
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem;">
+            <a href="/admin" class="btn btn-secondary">Cancelar</a>
+            <button
+              type="button"
+              class="btn preview-btn"
+              onclick="previewMarkdown()">Vista Previa</button
+            >
+            <button type="submit" class="btn">Crear Análisis</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Auto-generar slug desde el título
+      const titleInput = document.getElementById("title") as HTMLInputElement;
+      const slugInput = document.getElementById("slug") as HTMLInputElement;
+
+      if (titleInput && slugInput) {
+        titleInput.addEventListener("input", function (e) {
+          const target = e.target as HTMLInputElement;
+          if (target) {
+            const title = target.value;
+            const slug = title
+              .toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, "")
+              .replace(/\s+/g, "-")
+              .replace(/-+/g, "-")
+              .trim();
+            slugInput.value = slug;
+          }
+        });
+      }
+
+      // Autocompletar desde selección de serie
+      const serieSelector = document.getElementById(
+        "serieSelector"
+      ) as HTMLSelectElement;
+      const tagsInput = document.getElementById("tags") as HTMLInputElement;
+
+      if (serieSelector && tagsInput) {
+        serieSelector.addEventListener("change", function (e) {
+          const target = e.target as HTMLSelectElement;
+          if (target && target.value) {
+            const serieSlug = target.value;
+            const serieTitle =
+              target.options[target.selectedIndex].dataset.title;
+
+            // Agregar el slug de la serie a los tags si no está
+            const currentTags = tagsInput.value
+              .split(",")
+              .map((t) => t.trim())
+              .filter((t) => t);
+            if (!currentTags.includes(serieSlug)) {
+              currentTags.unshift(serieSlug);
+              tagsInput.value = currentTags.join(", ");
+            }
+
+            // Sugerir título si está vacío
+            if (titleInput && !titleInput.value && serieTitle) {
+              titleInput.placeholder = `Análisis de ${serieTitle}: `;
+            }
+          }
+        });
+      }
+
+      // Vista previa de Markdown (función básica)
+      function previewMarkdown() {
+        const content = (
+          document.getElementById("content") as HTMLTextAreaElement
+        )?.value;
+        if (content) {
+          const previewWindow = window.open(
+            "",
+            "_blank",
+            "width=800,height=600"
+          );
+          if (previewWindow) {
+            previewWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Vista Previa</title>
+                                <style>
+                                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
+                                    h1, h2, h3 { color: #2c3e50; }
+                                    code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+                                    pre { background: #f4f4f4; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+                                </style>
+                            </head>
+                            <body>
+                                <h1>Vista Previa del Análisis</h1>
+                                <div>${content.replace(/\n/g, "<br>")}</div>
+                            </body>
+                        </html>
+                    `);
+          }
+        } else {
+          alert("Escribe algo en el contenido primero");
+        }
+      }
+    </script>
+  </body>
+</html>

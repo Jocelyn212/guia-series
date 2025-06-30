@@ -1,0 +1,423 @@
+---
+import { getServerAuthUser } from "../../lib/auth";
+import { getSeries, getAnalisis } from "../../lib/mongo";
+
+// Verificar autenticación
+const user = getServerAuthUser(Astro.request);
+
+// Si no está autenticado o no es admin, redirigir al login
+if (!user || user.role !== "admin") {
+  return Astro.redirect("/login");
+}
+
+// Obtener estadísticas
+let totalSeries = 0;
+let totalAnalisis = 0;
+let error = "";
+
+try {
+  const series = await getSeries();
+  const analisis = await getAnalisis();
+  totalSeries = series.length;
+  totalAnalisis = analisis.length;
+} catch (err) {
+  error = "Error cargando estadísticas";
+}
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Administración - SeriesGuide</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>')
+          repeat;
+        opacity: 0.1;
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .user-info {
+        position: absolute;
+        top: 1rem;
+        right: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+
+      .welcome-text {
+        margin-bottom: 1rem;
+        opacity: 0.9;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+      }
+
+      .content {
+        padding: 2rem;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+      }
+
+      .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .action-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+      }
+
+      .action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      .action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        color: white;
+        font-size: 1.5rem;
+      }
+
+      .action-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+      }
+
+      .action-description {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+      }
+
+      .action-links {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .series-actions .action-icon {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      }
+
+      .analysis-actions .action-icon {
+        background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+      }
+
+      .management-actions .action-icon {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+      }
+
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+        margin-bottom: 1.5rem;
+      }
+
+      @media (max-width: 768px) {
+        .user-info {
+          position: relative;
+          top: auto;
+          right: auto;
+          justify-content: center;
+          margin-top: 1rem;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .actions-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="user-info">
+          <div class="user-avatar">
+            {user.username.charAt(0).toUpperCase()}
+          </div>
+          <span>Hola, {user.username}</span>
+          <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+        </div>
+
+        <div class="header-content">
+          <p class="welcome-text">Bienvenido al</p>
+          <h1>Panel de Administración</h1>
+          <p>SeriesGuide Dashboard</p>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        {error && <div class="error-message">⚠️ {error}</div>}
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">{totalSeries}</div>
+            <div class="stat-label">Series Registradas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{totalAnalisis}</div>
+            <div class="stat-label">Análisis Publicados</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{totalSeries + totalAnalisis}</div>
+            <div class="stat-label">Total de Contenido</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-grid">
+          <!-- Series Management -->
+          <div class="action-card series-actions">
+            <div class="action-icon">📺</div>
+            <div class="action-title">Gestión de Series</div>
+            <div class="action-description">
+              Agregar nuevas series, editar información existente y gestionar el
+              catálogo completo.
+            </div>
+            <div class="action-links">
+              <a href="/admin/add-serie" class="btn btn-primary">
+                ➕ Agregar Serie
+              </a>
+              <a href="/admin/manage-series" class="btn btn-secondary">
+                📝 Gestionar Series
+              </a>
+            </div>
+          </div>
+
+          <!-- Analysis Management -->
+          <div class="action-card analysis-actions">
+            <div class="action-icon">📖</div>
+            <div class="action-title">Gestión de Análisis</div>
+            <div class="action-description">
+              Crear nuevos análisis, editar contenido existente y gestionar
+              publicaciones.
+            </div>
+            <div class="action-links">
+              <a href="/admin/add-analysis" class="btn btn-primary">
+                ➕ Crear Análisis
+              </a>
+              <a href="/admin/manage-analysis" class="btn btn-secondary">
+                📝 Gestionar Análisis
+              </a>
+            </div>
+          </div>
+
+          <!-- Content Management -->
+          <div class="action-card management-actions">
+            <div class="action-icon">🔧</div>
+            <div class="action-title">Herramientas</div>
+            <div class="action-description">
+              Actualizar imágenes, gestionar contenido y herramientas de
+              mantenimiento.
+            </div>
+            <div class="action-links">
+              <a href="/admin/update-images" class="btn btn-primary">
+                🖼️ Actualizar Imágenes
+              </a>
+              <a href="/" class="btn btn-secondary" target="_blank">
+                👁️ Ver Sitio
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Función de logout
+      async function logout() {
+        try {
+          const response = await fetch("/api/auth", {
+            method: "DELETE",
+          });
+
+          if (response.ok) {
+            window.location.href = "/login";
+          } else {
+            alert("Error al cerrar sesión");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Error al cerrar sesión");
+        }
+      }
+
+      // Agregar event listener cuando el DOM esté listo
+      document.addEventListener("DOMContentLoaded", function () {
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", logout);
+        }
+      });
+    </script>
+  </body>
+</html>
