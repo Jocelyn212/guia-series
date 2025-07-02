@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Model, Types } from "mongoose";
+import mongoose, { Schema, Model, Types } from "mongoose";
 
 
 // Cargar variables de entorno explícitamente
@@ -264,7 +264,6 @@ export async function connectMongoDB() {
     }
 
     isConnected = true;
-    console.log("✅ Connected to MongoDB Atlas successfully");
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
     throw error;
