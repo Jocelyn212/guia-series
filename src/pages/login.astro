@@ -1,5 +1,6 @@
 ---
 import { getServerAuthUser } from "../lib/auth";
+import "../styles/global.css";
 
 // Si ya está logueado, redirigir a admin
 const user = getServerAuthUser(Astro.request);

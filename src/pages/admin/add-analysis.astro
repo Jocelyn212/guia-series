@@ -10,7 +10,7 @@ if (!user || user.role !== "admin") {
 }
 
 // Página para agregar nuevos análisis
-import { connectMongoDB, getSeries } from "../../lib/mongo";
+import { connectMongoDB, getSeries, insertAnalisis } from "../../lib/mongo";
 
 let success = false;
 let error = "";
@@ -47,9 +47,12 @@ if (Astro.request.method === "POST") {
       publishedAt: new Date(),
     };
 
-    const { analysisCollection } = await connectMongoDB();
-    await analysisCollection.insertOne(newAnalysis);
-    success = true;
+    const analysisId = await insertAnalisis(newAnalysis);
+    if (analysisId) {
+      success = true;
+    } else {
+      error = "Error creando el análisis";
+    }
   } catch (err) {
     error = err instanceof Error ? err.message : "Error desconocido";
   }
