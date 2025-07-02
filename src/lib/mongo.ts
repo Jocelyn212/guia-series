@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema, Model, Types } from "mongoose";
 
+
 // Cargar variables de entorno explícitamente
 if (typeof process !== "undefined" && !process.env.MONGODB_URI) {
   try {

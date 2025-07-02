@@ -1,0 +1,22 @@
+{
+  "version": 3,
+  "builds": [
+    {
+      "src": "dist/server/entry.mjs",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "src/pages/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": "@your_mongodb_uri"
+  }
+}
