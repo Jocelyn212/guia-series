@@ -2,5 +2,16 @@
   "framework": "astro",
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
-  "installCommand": "pnpm install"
+  "installCommand": "pnpm install",
+  "functions": {
+    "app/server/entry.mjs": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/app/server/entry.mjs"
+    }
+  ]
 }

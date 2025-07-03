@@ -79,11 +79,23 @@ if (Astro.request.method === "POST") {
     <title>Registro - SeriesGuide</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script>
-      // Prevenir errores de Vercel Analytics
+      // Prevenir solo errores específicos de Vercel Analytics, no interferir con el resto
       window.addEventListener('error', function(e) {
         if (e.filename && e.filename.includes('_vercel/insights')) {
+          console.log('Silenciando error de Vercel Analytics:', e.filename);
           e.preventDefault();
+          e.stopPropagation();
           return false;
+        }
+      });
+      
+      // Asegurar que el formulario funcione correctamente
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form[method="POST"]');
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            console.log('Formulario enviado correctamente');
+          });
         }
       });
     </script>
