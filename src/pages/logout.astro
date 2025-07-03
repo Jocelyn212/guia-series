@@ -1,0 +1,15 @@
+---
+import { clearPublicAuthCookie } from "../lib/publicAuth";
+
+// Limpiar la cookie de autenticación
+const clearCookie = clearPublicAuthCookie();
+
+// Usar respuesta manual en lugar de Astro.redirect()
+return new Response(null, {
+  status: 302,
+  headers: {
+    Location: "/",
+    "Set-Cookie": clearCookie,
+  },
+});
+---

@@ -1,13 +1,9 @@
 ---
-import { getServerAuthUser } from "../../lib/auth";
+import { protectAdminPage } from "../../lib/adminSecurity";
 import "../../styles/global.css";
-// Verificar autenticación
-const user = getServerAuthUser(Astro.request);
 
-// Si no está autenticado o no es admin, redirigir al login
-if (!user || user.role !== "admin") {
-  return Astro.redirect("/login");
-}
+// Proteger página de administración
+const user = protectAdminPage(Astro.request);
 
 // Página para gestionar análisis existentes
 import { getAnalisis } from "../../lib/mongo";
@@ -30,15 +26,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestionar Análisis - Admin SeriesGuide</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
-    <style>
-      .modal {
-        display: none;
-      }
-      .modal.active {
-        display: flex;
-      }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-gray-900 min-h-screen">
     <div class="container mx-auto px-4 py-8">

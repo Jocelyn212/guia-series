@@ -1,14 +1,9 @@
 ---
-import { getServerAuthUser } from "../../lib/auth";
+import { protectAdminPage } from "../../lib/adminSecurity";
 import "../../styles/global.css";
 
-// Verificar autenticación
-const user = getServerAuthUser(Astro.request);
-
-// Si no está autenticado o no es admin, redirigir al login
-if (!user || user.role !== "admin") {
-  return Astro.redirect("/login");
-}
+// Proteger página de administración
+const user = protectAdminPage(Astro.request);
 
 // Página para agregar nuevas series
 ---

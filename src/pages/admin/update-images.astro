@@ -1,16 +1,11 @@
 ---
-import { getServerAuthUser } from "../../lib/auth";
+import { protectAdminPage } from "../../lib/adminSecurity";
 
-// Verificar autenticación
-const user = getServerAuthUser(Astro.request);
-
-// Si no está autenticado o no es admin, redirigir al login
-if (!user || user.role !== "admin") {
-  return Astro.redirect("/login");
-}
+// Proteger página de administración
+const user = protectAdminPage(Astro.request);
 
 // Página para actualizar imágenes de series
-import { connectMongoDB, getSeries } from "../../lib/mongo";
+import { getSeries, getSerieBySlug, updateSerie } from "../../lib/mongo";
 
 let success = false;
 let error = "";
@@ -29,20 +24,40 @@ if (Astro.request.method === "POST") {
     const posterUrl = formData.get("posterUrl") as string;
     const backdropUrl = formData.get("backdropUrl") as string;
 
-    const { seriesCollection } = await connectMongoDB();
-    await seriesCollection.updateOne(
-      { slug: serieSlug },
-      {
-        $set: {
-          posterUrl,
-          backdropUrl,
-          updatedAt: new Date(),
-        },
+    if (!serieSlug) {
+      error = "Serie no seleccionada";
+    } else {
+      // Buscar la serie por slug para obtener el ID
+      const serie = await getSerieBySlug(serieSlug);
+
+      if (!serie) {
+        error = "Serie no encontrada";
+      } else {
+        // Preparar datos de actualización
+        const updateData: any = {};
+        if (posterUrl) updateData.posterUrl = posterUrl;
+        if (backdropUrl) updateData.backdropUrl = backdropUrl;
+
+        if (Object.keys(updateData).length === 0) {
+          error = "No se proporcionaron URLs para actualizar";
+        } else {
+          // Actualizar la serie usando el ID
+          const updated = await updateSerie(
+            (serie._id as any).toString(),
+            updateData
+          );
+
+          if (updated) {
+            success = true;
+          } else {
+            error = "Error al actualizar la serie";
+          }
+        }
       }
-    );
-    success = true;
+    }
   } catch (err) {
     error = err instanceof Error ? err.message : "Error desconocido";
+    console.error("Error actualizando imágenes:", err);
   }
 }
 ---

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import type { APIContext } from "astro";
 
-const JWT_SECRET = "your-jwt-secret-key"; // En producción, usar variable de entorno
+const JWT_SECRET = "mi-super-secreto-jwt-para-desarrollo-cambiar-en-produccion";
 
 export interface AuthUser {
   userId: string;

@@ -34,8 +34,9 @@ export default function FullAnalysisCard({
   const [hasLiked, setHasLiked] = useState(false)
   const [hasViewed, setHasViewed] = useState(false)
 
-  const bgColor = universe === 'blue' ? 'bg-blue-600' : 'bg-red-600'
-  const badgeColor = universe === 'blue' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'
+  // Colores elegantes y profesionales en lugar de azul/rojo fuertes
+  const bgColor = universe === 'blue' ? 'bg-slate-600' : 'bg-purple-600'
+  const badgeColor = universe === 'blue' ? 'bg-slate-100 text-slate-700' : 'bg-purple-100 text-purple-700'
   
   // Simular incremento de vista al cargar el componente
   useState(() => {
@@ -82,11 +83,8 @@ export default function FullAnalysisCard({
     <article className="bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
       <div className={`${bgColor} p-6 text-white`}>
-        <div className="flex justify-between items-start mb-4">
-          <h1 className="text-2xl font-bold leading-tight pr-4">{title}</h1>
-          <span className={`${badgeColor} px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap`}>
-            {universe === 'blue' ? 'Universo Azul' : 'Universo Rojo'}
-          </span>
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold leading-tight">{title}</h1>
         </div>
         
         {/* Excerpt */}

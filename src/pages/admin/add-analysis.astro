@@ -1,13 +1,8 @@
 ---
-import { getServerAuthUser } from "../../lib/auth";
+import { protectAdminPage } from "../../lib/adminSecurity";
 
-// Verificar autenticación
-const user = getServerAuthUser(Astro.request);
-
-// Si no está autenticado o no es admin, redirigir al login
-if (!user || user.role !== "admin") {
-  return Astro.redirect("/login");
-}
+// Proteger página de administración
+const user = protectAdminPage(Astro.request);
 
 // Página para agregar nuevos análisis
 import { connectMongoDB, getSeries, insertAnalisis } from "../../lib/mongo";
@@ -356,13 +351,15 @@ Puedes usar:
             </div>
 
             <div class="form-group">
-              <label for="universe">Universo (Opcional)</label>
+              <label for="universe">Tipo de Análisis (Opcional)</label>
               <select id="universe" name="universe">
-                <option value="">Sin universo específico</option>
-                <option value="blue">Universo Azul</option>
-                <option value="red">Universo Rojo</option>
+                <option value="">Análisis estándar</option>
+                <option value="blue">Análisis principal</option>
+                <option value="red">Análisis especial</option>
               </select>
-              <div class="help-text">Para series como Fringe</div>
+              <div class="help-text">
+                Diferencia visual para destacar ciertos análisis
+              </div>
             </div>
           </div>
 

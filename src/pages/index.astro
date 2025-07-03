@@ -1,11 +1,16 @@
 ---
 import SeriesGrid from "../components/SeriesGrid";
 import StatsDisplay from "../components/StatsDisplay";
+import UserNav from "../components/UserNav.astro";
 import { getSeries } from "../lib/mongo";
+import { getPublicAuthUser } from "../lib/publicAuth";
 import "../styles/global.css";
 
 // Obtiene todas las series desde MongoDB
 const seriesData = await getSeries();
+
+// Verificar si hay un usuario logueado
+const currentUser = getPublicAuthUser(Astro.request);
 ---
 
 <!doctype html>
@@ -25,17 +30,19 @@ const seriesData = await getSeries();
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <a href="/" class="text-xl font-bold text-blue-600"
+            <a href="/" class="text-xl font-bold text-slate-700"
               >📺 SeriesGuide</a
             >
           </div>
           <div class="flex items-center space-x-4">
-            <a href="/" class="text-blue-600 font-medium">Series</a>
+            <a href="/" class="text-slate-700 font-medium">Series</a>
             <a
               href="/analisis"
-              class="text-gray-600 hover:text-blue-600 transition-colors"
+              class="text-gray-600 hover:text-slate-700 transition-colors"
               >Análisis</a
             >
+
+            <UserNav />
           </div>
         </div>
       </div>

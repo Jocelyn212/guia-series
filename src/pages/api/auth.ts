@@ -1,19 +1,24 @@
 import type { APIRoute } from "astro";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getUserByCredentials, updateLastLogin } from "../../lib/mongo";
 
-const JWT_SECRET = "your-jwt-secret-key"; // En producción, usar variable de entorno
+// Simplificar las constantes
+const JWT_SECRET = "mi-super-secreto-jwt-para-desarrollo-cambiar-en-produccion";
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "admin123";
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    const { username, password } = await request.json();
+    // Leer el body de forma segura
+    const body = await request.json();
+
+    const username = body?.username;
+    const password = body?.password;
 
     if (!username || !password) {
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Username y password son requeridos",
+          message: "Username and password are required",
         }),
         {
           status: 400,
@@ -22,100 +27,52 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Buscar usuario
-    const user = await getUserByCredentials(username);
-
-    if (!user) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Credenciales inválidas",
-        }),
+    // Verificar credenciales
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      // Crear token simple
+      const token = jwt.sign(
         {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Verificar contraseña
-    const isValidPassword = await bcrypt.compare(password, user.password);
-
-    if (!isValidPassword) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Credenciales inválidas",
-        }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Verificar si el usuario está activo
-    if (!user.isActive) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Usuario inactivo",
-        }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Actualizar último login
-    if (user._id) {
-      await updateLastLogin(user._id);
-    }
-
-    // Crear JWT token
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        username: user.username,
-        role: user.role,
-      },
-      JWT_SECRET,
-      { expiresIn: "24h" }
-    );
-
-    // Preparar datos del usuario (sin contraseña)
-    const userData = {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-      isActive: user.isActive,
-    };
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Login exitoso",
-        user: userData,
-        token,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Set-Cookie": `auth-token=${token}; HttpOnly; Path=/; Max-Age=${
-            24 * 60 * 60
-          }; SameSite=Strict`,
+          userId: "admin-001",
+          username,
+          role: "admin",
         },
-      }
-    );
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Limpiar cualquier sesión de usuario público antes de configurar admin
+      cookies.delete("public-auth-token");
+
+      // Configurar cookie de admin
+      cookies.set("auth-token", token, {
+        httpOnly: true,
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } else {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Invalid credentials",
+        }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
   } catch (error) {
-    console.error("Error en login:", error);
+    console.error("Auth error:", error);
+
     return new Response(
       JSON.stringify({
         success: false,
-        message: "Error interno del servidor",
+        message: "Server error",
       }),
       {
         status: 500,
@@ -125,20 +82,28 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-export const DELETE: APIRoute = async () => {
-  // Logout - limpiar cookie
-  return new Response(
-    JSON.stringify({
-      success: true,
-      message: "Logout exitoso",
-    }),
-    {
+// Manejar logout de admin (DELETE)
+export const DELETE: APIRoute = async ({ cookies }) => {
+  try {
+    // Limpiar la cookie de autenticación de admin
+    cookies.delete("auth-token");
+
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Set-Cookie":
-          "auth-token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict",
-      },
-    }
-  );
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: "Server error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
 };

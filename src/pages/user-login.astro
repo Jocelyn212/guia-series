@@ -1,0 +1,163 @@
+---
+import { getUserByEmail, updateUserLastLogin } from "../lib/mongo";
+import { createPublicAuthCookie, getPublicAuthUser } from "../lib/publicAuth";
+import crypto from "node:crypto";
+import "../styles/global.css";
+
+// Función simple para hashear contraseñas (igual que en registro)
+function hashPassword(password: string): string {
+  return crypto
+    .createHash("sha256")
+    .update(password + "salt-series-guide")
+    .digest("hex");
+}
+
+// Si ya está autenticado como usuario público, redirigir
+const publicUser = getPublicAuthUser(Astro.request);
+if (publicUser) {
+  return Astro.redirect("/");
+}
+
+let error = "";
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) {
+      error = "Email y contraseña son obligatorios";
+    } else {
+      const user = await getUserByEmail(email);
+
+      if (!user) {
+        error = "Usuario no encontrado";
+      } else if (user.role === "admin") {
+        // CRÍTICO: No permitir que admins usen este login
+        error = "Acceso no autorizado. Use el panel administrativo.";
+      } else if (!user.isActive) {
+        error = "Cuenta desactivada";
+      } else {
+        const hashedPassword = hashPassword(password);
+
+        if (hashedPassword !== user.password) {
+          error = "Contraseña incorrecta";
+        } else {
+          // Login exitoso para usuario público
+          const publicUserData = {
+            id: (user._id as any).toString(),
+            username: user.username,
+            email: user.email,
+            role: "user" as const,
+          };
+
+          // Actualizar último login
+          await updateUserLastLogin(publicUserData.id);
+
+          // Crear cookie de autenticación
+          const authCookie = createPublicAuthCookie(publicUserData);
+
+          // En lugar de usar Astro.redirect(), vamos a crear una respuesta manual con la cookie
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: "/",
+              "Set-Cookie": authCookie,
+            },
+          });
+        }
+      }
+    }
+  } catch (err) {
+    error = "Error del servidor";
+    console.error("Error en login:", err);
+  }
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar Sesión - SeriesGuide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center p-4 font-sans"
+  >
+    <div
+      class="bg-white/95 rounded-2xl shadow-2xl backdrop-blur-lg p-8 w-full max-w-md"
+    >
+      <div class="text-center mb-8">
+        <h1 class="text-slate-800 text-3xl font-bold mb-2">📺 SeriesGuide</h1>
+        <p class="text-gray-600">Accede a tu cuenta de usuario</p>
+      </div>
+
+      <div
+        class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-4 rounded-lg mb-4 text-center text-sm"
+      >
+        <strong>👤 Login de Usuario</strong><br />
+        Este es el acceso para usuarios públicos. Si eres administrador,
+        <a href="/login" class="text-yellow-800 underline">usa el panel admin</a
+        >
+      </div>
+
+      {
+        error && (
+          <div class="bg-red-100 border border-red-300 text-red-800 p-4 rounded-lg mb-4">
+            ❌ {error}
+          </div>
+        )
+      }
+
+      <form method="POST">
+        <div class="mb-6">
+          <label for="email" class="block mb-2 font-semibold text-slate-800"
+            >Email</label
+          >
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="tu@email.com"
+            class="w-full p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+
+        <div class="mb-6">
+          <label for="password" class="block mb-2 font-semibold text-slate-800"
+            >Contraseña</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="Tu contraseña"
+            class="w-full p-3 border-2 border-gray-200 rounded-lg text-base transition-colors focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-3 border-none rounded-lg font-semibold text-base cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+          >Iniciar Sesión</button
+        >
+      </form>
+
+      <div class="text-center mt-6">
+        <a href="/" class="text-indigo-600 no-underline mx-2 hover:underline"
+          >← Volver al inicio</a
+        >
+        <a
+          href="/register"
+          class="text-indigo-600 no-underline mx-2 hover:underline"
+          >¿No tienes cuenta?</a
+        >
+      </div>
+    </div>
+  </body>
+</html>

@@ -2,7 +2,6 @@
 import SeriesGrid from "../components/SeriesGrid";
 import SerieCard from "../components/SerieCard";
 import { getSeries } from "../lib/mongo";
-import "../styles/global.css";
 
 // Obtiene todas las series desde MongoDB
 const seriesData = await getSeries();
@@ -25,17 +24,17 @@ const seriesData = await getSeries();
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <a href="/" class="text-xl font-bold text-blue-600"
+            <a href="/" class="text-xl font-bold text-slate-700"
               >📺 SeriesGuide</a
             >
           </div>
           <div class="flex items-center space-x-4">
             <a
               href="/"
-              class="text-gray-600 hover:text-blue-600 transition-colors"
+              class="text-gray-600 hover:text-slate-700 transition-colors"
               >Inicio</a
             >
-            <a href="/series" class="text-blue-600 font-medium">Series</a>
+            <a href="/series" class="text-slate-700 font-medium">Series</a>
           </div>
         </div>
       </div>
@@ -56,7 +55,7 @@ const seriesData = await getSeries();
       {/* Stats */}
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white p-6 rounded-lg shadow-md text-center">
-          <div class="text-3xl font-bold text-blue-600">
+          <div class="text-3xl font-bold text-slate-700">
             {seriesData.length}
           </div>
           <div class="text-gray-600">Series Analizadas</div>

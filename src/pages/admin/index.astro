@@ -1,14 +1,18 @@
 ---
-import { getServerAuthUser } from "../../lib/auth";
+import { protectAdminPage } from "../../lib/adminSecurity";
 import { getSeries, getAnalisis } from "../../lib/mongo";
+import "../../styles/global.css";
 
-// Verificar autenticación
-const user = getServerAuthUser(Astro.request);
+// Proteger página de administración
+const protectionResult = protectAdminPage(Astro.request);
 
-// Si no está autenticado o no es admin, redirigir al login
-if (!user || user.role !== "admin") {
-  return Astro.redirect("/login");
+// Si protectAdminPage devuelve una Response (redirect o error), devolverla inmediatamente
+if (protectionResult instanceof Response) {
+  return protectionResult;
 }
+
+// Si llegamos aquí, el usuario es un admin válido
+const user = protectionResult;
 
 // Obtener estadísticas
 let totalSeries = 0;
@@ -22,6 +26,7 @@ try {
   totalAnalisis = analisis.length;
 } catch (err) {
   error = "Error cargando estadísticas";
+  console.error("Error loading admin stats:", err);
 }
 ---
 
@@ -30,360 +35,195 @@ try {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel de Administración - SeriesGuide</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 2rem;
-      }
-
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 16px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
-        overflow: hidden;
-      }
-
-      .header {
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        color: white;
-        padding: 2rem;
-        text-align: center;
-        position: relative;
-      }
-
-      .header::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>')
-          repeat;
-        opacity: 0.1;
-      }
-
-      .header-content {
-        position: relative;
-        z-index: 1;
-      }
-
-      .user-info {
-        position: absolute;
-        top: 1rem;
-        right: 2rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-
-      .user-avatar {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-      }
-
-      .logout-btn {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
-      }
-
-      .logout-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: translateY(-1px);
-      }
-
-      .welcome-text {
-        margin-bottom: 1rem;
-        opacity: 0.9;
-      }
-
-      .header h1 {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-        font-weight: 700;
-      }
-
-      .content {
-        padding: 2rem;
-      }
-
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-      }
-
-      .stat-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        border: 1px solid #dee2e6;
-        transition: all 0.3s ease;
-      }
-
-      .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-      }
-
-      .stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-      }
-
-      .stat-label {
-        color: #6c757d;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.9rem;
-        letter-spacing: 0.5px;
-      }
-
-      .actions-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-      }
-
-      .action-card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-        border: 1px solid #e9ecef;
-        transition: all 0.3s ease;
-      }
-
-      .action-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-      }
-
-      .action-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1rem;
-        color: white;
-        font-size: 1.5rem;
-      }
-
-      .action-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-      }
-
-      .action-description {
-        color: #6c757d;
-        margin-bottom: 1.5rem;
-        line-height: 1.6;
-      }
-
-      .action-links {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-      }
-
-      .btn {
-        padding: 0.75rem 1.5rem;
-        text-decoration: none;
-        border-radius: 8px;
-        font-weight: 600;
-        text-align: center;
-        border: none;
-        cursor: pointer;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-      }
-
-      .btn-secondary {
-        background: #6c757d;
-        color: white;
-      }
-
-      .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      .series-actions .action-icon {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      }
-
-      .analysis-actions .action-icon {
-        background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
-      }
-
-      .management-actions .action-icon {
-        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-      }
-
-      .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #f5c6cb;
-        margin-bottom: 1.5rem;
-      }
-
-      @media (max-width: 768px) {
-        .user-info {
-          position: relative;
-          top: auto;
-          right: auto;
-          justify-content: center;
-          margin-top: 1rem;
-        }
-
-        .header h1 {
-          font-size: 2rem;
-        }
-
-        .stats-grid {
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        }
-
-        .actions-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div class="container">
+  <body
+    class="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 p-8 font-sans"
+  >
+    <div
+      class="max-w-6xl mx-auto bg-white/95 rounded-2xl shadow-2xl backdrop-blur-lg overflow-hidden"
+    >
       <!-- Header -->
-      <div class="header">
-        <div class="user-info">
-          <div class="user-avatar">
-            {user.username.charAt(0).toUpperCase()}
-          </div>
-          <span>Hola, {user.username}</span>
-          <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+      <div
+        class="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-8 relative"
+      >
+        <!-- Pattern overlay -->
+        <div
+          class="absolute inset-0 opacity-10"
+          style='background-image: url(&apos;data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>&apos;); background-repeat: repeat;'
+        >
         </div>
 
-        <div class="header-content">
-          <p class="welcome-text">Bienvenido al</p>
-          <h1>Panel de Administración</h1>
-          <p>SeriesGuide Dashboard</p>
+        <!-- User info -->
+        <div class="absolute top-4 right-8 flex items-center gap-4 z-10">
+          <div
+            class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold"
+          >
+            {user.username.charAt(0).toUpperCase()}
+          </div>
+          <span class="text-white/90">Hola, {user.username}</span>
+          <a
+            href="/admin-logout"
+            class="bg-white/20 hover:bg-white/30 border border-white/30 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 inline-flex items-center justify-center min-w-[120px] min-h-[40px] text-white no-underline"
+          >
+            Cerrar Sesión
+          </a>
+        </div>
+
+        <!-- Header content -->
+        <div class="relative z-10 text-center">
+          <p class="text-white/90 mb-2">Bienvenido al</p>
+          <h1 class="text-4xl md:text-5xl font-bold mb-2">
+            Panel de Administración
+          </h1>
+          <p class="text-white/80">SeriesGuide Dashboard</p>
         </div>
       </div>
 
       <!-- Content -->
-      <div class="content">
-        {error && <div class="error-message">⚠️ {error}</div>}
+      <div class="p-8">
+        {
+          error && (
+            <div class="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg mb-6">
+              ⚠️ {error}
+            </div>
+          )
+        }
 
         <!-- Statistics -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number">{totalSeries}</div>
-            <div class="stat-label">Series Registradas</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div
+            class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl text-center border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+          >
+            <div class="text-4xl font-bold text-slate-800 mb-2">
+              {totalSeries}
+            </div>
+            <div
+              class="text-gray-600 font-semibold uppercase text-sm tracking-wider"
+            >
+              Series Registradas
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-number">{totalAnalisis}</div>
-            <div class="stat-label">Análisis Publicados</div>
+          <div
+            class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl text-center border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+          >
+            <div class="text-4xl font-bold text-slate-800 mb-2">
+              {totalAnalisis}
+            </div>
+            <div
+              class="text-gray-600 font-semibold uppercase text-sm tracking-wider"
+            >
+              Análisis Publicados
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-number">{totalSeries + totalAnalisis}</div>
-            <div class="stat-label">Total de Contenido</div>
+          <div
+            class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl text-center border border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+          >
+            <div class="text-4xl font-bold text-slate-800 mb-2">
+              {totalSeries + totalAnalisis}
+            </div>
+            <div
+              class="text-gray-600 font-semibold uppercase text-sm tracking-wider"
+            >
+              Total de Contenido
+            </div>
           </div>
         </div>
 
         <!-- Actions -->
-        <div class="actions-grid">
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           <!-- Series Management -->
-          <div class="action-card series-actions">
-            <div class="action-icon">📺</div>
-            <div class="action-title">Gestión de Series</div>
-            <div class="action-description">
+          <div
+            class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex items-center justify-center text-white text-2xl mb-4"
+            >
+              📺
+            </div>
+            <div class="text-xl font-semibold text-slate-800 mb-2">
+              Gestión de Series
+            </div>
+            <div class="text-gray-600 mb-6 leading-relaxed">
               Agregar nuevas series, editar información existente y gestionar el
               catálogo completo.
             </div>
-            <div class="action-links">
-              <a href="/admin/add-serie" class="btn btn-primary">
+            <div class="flex flex-wrap gap-3">
+              <a
+                href="/admin/add-serie"
+                class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg inline-flex items-center gap-2 no-underline"
+              >
                 ➕ Agregar Serie
               </a>
-              <a href="/admin/manage-series" class="btn btn-secondary">
+              <a
+                href="/admin/manage-series"
+                class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg inline-flex items-center gap-2 no-underline"
+              >
                 📝 Gestionar Series
               </a>
             </div>
           </div>
 
           <!-- Analysis Management -->
-          <div class="action-card analysis-actions">
-            <div class="action-icon">📖</div>
-            <div class="action-title">Gestión de Análisis</div>
-            <div class="action-description">
+          <div
+            class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl mb-4"
+            >
+              📖
+            </div>
+            <div class="text-xl font-semibold text-slate-800 mb-2">
+              Gestión de Análisis
+            </div>
+            <div class="text-gray-600 mb-6 leading-relaxed">
               Crear nuevos análisis, editar contenido existente y gestionar
               publicaciones.
             </div>
-            <div class="action-links">
-              <a href="/admin/add-analysis" class="btn btn-primary">
+            <div class="flex flex-wrap gap-3">
+              <a
+                href="/admin/add-analysis"
+                class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg inline-flex items-center gap-2 no-underline"
+              >
                 ➕ Crear Análisis
               </a>
-              <a href="/admin/manage-analysis" class="btn btn-secondary">
+              <a
+                href="/admin/manage-analysis"
+                class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg inline-flex items-center gap-2 no-underline"
+              >
                 📝 Gestionar Análisis
               </a>
             </div>
           </div>
 
           <!-- Content Management -->
-          <div class="action-card management-actions">
-            <div class="action-icon">🔧</div>
-            <div class="action-title">Herramientas</div>
-            <div class="action-description">
+          <div
+            class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div
+              class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center text-white text-2xl mb-4"
+            >
+              🔧
+            </div>
+            <div class="text-xl font-semibold text-slate-800 mb-2">
+              Herramientas
+            </div>
+            <div class="text-gray-600 mb-6 leading-relaxed">
               Actualizar imágenes, gestionar contenido y herramientas de
               mantenimiento.
             </div>
-            <div class="action-links">
-              <a href="/admin/update-images" class="btn btn-primary">
+            <div class="flex flex-wrap gap-3">
+              <a
+                href="/admin/update-images"
+                class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg inline-flex items-center gap-2 no-underline"
+              >
                 🖼️ Actualizar Imágenes
               </a>
-              <a href="/" class="btn btn-secondary" target="_blank">
+              <a
+                href="/"
+                target="_blank"
+                class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg inline-flex items-center gap-2 no-underline"
+              >
                 👁️ Ver Sitio
               </a>
             </div>
@@ -391,33 +231,5 @@ try {
         </div>
       </div>
     </div>
-
-    <script>
-      // Función de logout
-      async function logout() {
-        try {
-          const response = await fetch("/api/auth", {
-            method: "DELETE",
-          });
-
-          if (response.ok) {
-            window.location.href = "/login";
-          } else {
-            alert("Error al cerrar sesión");
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          alert("Error al cerrar sesión");
-        }
-      }
-
-      // Agregar event listener cuando el DOM esté listo
-      document.addEventListener("DOMContentLoaded", function () {
-        const logoutBtn = document.getElementById("logoutBtn");
-        if (logoutBtn) {
-          logoutBtn.addEventListener("click", logout);
-        }
-      });
-    </script>
   </body>
 </html>

@@ -1,0 +1,97 @@
+---
+interface Props {
+  analysisId: string;
+  userId?: string;
+  userLikes?: string[];
+  currentLikes?: number;
+}
+
+const { analysisId, userId, userLikes = [], currentLikes = 0 } = Astro.props;
+const isLiked = userLikes.includes(analysisId);
+---
+
+<button
+  class={`flex items-center gap-2 border-2 transition-all duration-200 px-3 py-2 rounded-md font-medium text-sm hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed ${
+    isLiked
+      ? "border-blue-500 bg-blue-500 text-white"
+      : "border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-500"
+  }`}
+  data-analysis={analysisId}
+  data-action={isLiked ? "remove" : "add"}
+  onclick="toggleLike(this)"
+>
+  <span class="text-base">{isLiked ? "👍" : "👍🏻"}</span>
+  <span class="font-semibold" data-count={currentLikes}>{currentLikes}</span>
+</button>
+
+<script>
+  async function toggleLike(button: HTMLButtonElement) {
+    if (button.disabled) return;
+
+    button.disabled = true;
+
+    try {
+      const analysisId = button.dataset.analysis;
+      const action = button.dataset.action;
+
+      const response = await fetch("/api/likes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ analysisId, action }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Actualizar UI
+          const isAdding = action === "add";
+          button.dataset.action = isAdding ? "remove" : "add";
+
+          const icon = button.querySelector("span:first-child");
+          const countEl = button.querySelector(
+            "span:last-child"
+          ) as HTMLElement;
+
+          if (isAdding) {
+            // Cambiar a estado liked
+            button.className = button.className.replace(
+              "border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-500",
+              "border-blue-500 bg-blue-500 text-white"
+            );
+            if (icon) icon.textContent = "👍";
+          } else {
+            // Cambiar a estado no liked
+            button.className = button.className.replace(
+              "border-blue-500 bg-blue-500 text-white",
+              "border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-500"
+            );
+            if (icon) icon.textContent = "👍🏻";
+          }
+
+          if (countEl) {
+            const currentCount = parseInt(countEl.dataset.count || "0");
+            const newCount = isAdding ? currentCount + 1 : currentCount - 1;
+            countEl.textContent = newCount.toString();
+            countEl.dataset.count = newCount.toString();
+          }
+        } else {
+          alert("Error al actualizar like: " + result.error);
+        }
+      } else {
+        const error = await response.json();
+        alert("Error: " + error.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error de conexión");
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  // Hacer la función global
+  (window as any).toggleLike = toggleLike;
+</script>

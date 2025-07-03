@@ -1,0 +1,89 @@
+---
+interface Props {
+  serieSlug: string;
+  userId?: string;
+  userFavorites?: string[];
+}
+
+const { serieSlug, userId, userFavorites = [] } = Astro.props;
+const isFavorite = userFavorites.includes(serieSlug);
+---
+
+<button
+  class={`flex items-center gap-2 border-2 transition-all duration-200 px-4 py-3 rounded-lg font-medium text-sm hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed ${
+    isFavorite
+      ? "border-red-500 bg-red-500 text-white"
+      : "border-gray-300 text-gray-600 hover:border-red-500 hover:text-red-500"
+  }`}
+  data-serie={serieSlug}
+  data-action={isFavorite ? "remove" : "add"}
+  onclick="toggleFavorite(this)"
+>
+  <span class="text-base">{isFavorite ? "❤️" : "🤍"}</span>
+  <span>{isFavorite ? "En Favoritos" : "Agregar a Favoritos"}</span>
+</button>
+
+<script>
+  async function toggleFavorite(button: HTMLButtonElement) {
+    if (button.disabled) return;
+
+    button.disabled = true;
+
+    try {
+      const serieSlug = button.dataset.serie;
+      const action = button.dataset.action;
+
+      const response = await fetch("/api/favorites", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ serieSlug, action }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Actualizar UI
+          const isAdding = action === "add";
+          button.dataset.action = isAdding ? "remove" : "add";
+
+          const icon = button.querySelector("span:first-child");
+          const text = button.querySelector("span:last-child");
+
+          if (isAdding) {
+            // Cambiar a estado favorito
+            button.className = button.className.replace(
+              "border-gray-300 text-gray-600 hover:border-red-500 hover:text-red-500",
+              "border-red-500 bg-red-500 text-white"
+            );
+            if (icon) icon.textContent = "❤️";
+            if (text) text.textContent = "En Favoritos";
+          } else {
+            // Cambiar a estado no favorito
+            button.className = button.className.replace(
+              "border-red-500 bg-red-500 text-white",
+              "border-gray-300 text-gray-600 hover:border-red-500 hover:text-red-500"
+            );
+            if (icon) icon.textContent = "🤍";
+            if (text) text.textContent = "Agregar a Favoritos";
+          }
+        } else {
+          alert("Error al actualizar favoritos: " + result.error);
+        }
+      } else {
+        const error = await response.json();
+        alert("Error: " + error.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error de conexión");
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  // Hacer la función global
+  (window as any).toggleFavorite = toggleFavorite;
+</script>
