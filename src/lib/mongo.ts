@@ -816,3 +816,23 @@ export async function removeUserLikedAnalysis(
     return false;
   }
 }
+
+// Actualizar contraseña de usuario
+export async function updateUserPassword(
+  userId: string,
+  newPassword: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+    const result = await UserModel.findByIdAndUpdate(
+      userId,
+      { password: newPassword, updatedAt: new Date() },
+      { new: true }
+    ).exec();
+    return !!result;
+  } catch (error) {
+    console.error("Error updating user password:", error);
+    return false;
+  }
+}

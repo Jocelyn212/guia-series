@@ -1,17 +1,10 @@
 ---
 import { createUser, getUserByCredentials, type User } from "../lib/mongo";
-import { createHash } from "crypto";
+import { hashPassword } from "../lib/password";
 import "../styles/global.css";
 
 let success = false;
 let error = "";
-
-// Función para hashear contraseña (igual que en login)
-function hashPassword(password: string): string {
-  return createHash("sha256")
-    .update(password + "salt-series-guide")
-    .digest("hex");
-}
 
 if (Astro.request.method === "POST") {
   try {
@@ -39,7 +32,7 @@ if (Astro.request.method === "POST") {
         error = "El usuario o email ya están registrados";
       } else {
         // Crear el usuario en la base de datos
-        const hashedPassword = hashPassword(password);
+        const hashedPassword = await hashPassword(password);
         const userData: User = {
           username,
           email,

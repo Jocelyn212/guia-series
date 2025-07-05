@@ -1,16 +1,12 @@
 ---
-import { getUserByEmail, updateUserLastLogin } from "../lib/mongo";
+import {
+  getUserByEmail,
+  updateUserLastLogin,
+  updateUserPassword,
+} from "../lib/mongo";
 import { createPublicAuthCookie, getPublicAuthUser } from "../lib/publicAuth";
-import crypto from "node:crypto";
+import { verifyPasswordWithMigration } from "../lib/password";
 import "../styles/global.css";
-
-// Función simple para hashear contraseñas (igual que en registro)
-function hashPassword(password: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(password + "salt-series-guide")
-    .digest("hex");
-}
 
 // Si ya está autenticado como usuario público, redirigir
 const publicUser = getPublicAuthUser(Astro.request);
@@ -39,11 +35,22 @@ if (Astro.request.method === "POST") {
       } else if (!user.isActive) {
         error = "Cuenta desactivada";
       } else {
-        const hashedPassword = hashPassword(password);
+        // Verificar contraseña con migración automática
+        const passwordResult = await verifyPasswordWithMigration(
+          password,
+          user.password
+        );
 
-        if (hashedPassword !== user.password) {
+        if (!passwordResult.isValid) {
           error = "Contraseña incorrecta";
         } else {
+          // Si necesita actualización, actualizar la contraseña en la base de datos
+          if (passwordResult.needsUpdate && passwordResult.newHash) {
+            await updateUserPassword(
+              (user._id as any).toString(),
+              passwordResult.newHash
+            );
+          }
           // Login exitoso para usuario público
           const publicUserData = {
             id: (user._id as any).toString(),

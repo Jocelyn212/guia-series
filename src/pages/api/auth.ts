@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import jwt from "jsonwebtoken";
 import { getUserByCredentials } from "../../lib/mongo";
-import crypto from "node:crypto";
+import { verifyPassword } from "../../lib/password";
 
 // Obtener JWT_SECRET de las variables de entorno
 const JWT_SECRET =
@@ -10,28 +10,13 @@ const JWT_SECRET =
     : import.meta.env.JWT_SECRET ||
       "mi-super-secreto-jwt-para-desarrollo-cambiar-en-produccion";
 
-// Función para hashear contraseñas (igual que en user-auth)
-function hashPassword(password: string): string {
-  return crypto
-    .createHash("sha256")
-    .update(password + "salt-series-guide")
-    .digest("hex");
-}
-
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Debug: Log para verificar el entorno
-    console.log("🔍 Debug - Auth endpoint called");
-    console.log("🔍 JWT_SECRET existe:", !!JWT_SECRET);
-    console.log("🔍 JWT_SECRET length:", JWT_SECRET.length);
-    
     // Leer el body de forma segura
     const body = await request.json();
 
     const username = body?.username;
     const password = body?.password;
-
-    console.log("🔍 Debug - Login attempt for username:", username);
 
     if (!username || !password) {
       return new Response(
@@ -48,9 +33,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Buscar usuario en la base de datos
     const user = await getUserByCredentials(username);
-    console.log("🔍 Debug - User found:", !!user);
-    console.log("🔍 Debug - User role:", user?.role);
-    console.log("🔍 Debug - User isActive:", user?.isActive);
 
     if (!user) {
       return new Response(
@@ -94,13 +76,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       );
     }
 
-    // Verificar contraseña
-    const hashedPassword = hashPassword(password);
-    console.log("🔍 Debug - Password hash generated:", hashedPassword.substring(0, 20) + "...");
-    console.log("🔍 Debug - Stored password hash:", user.password.substring(0, 20) + "...");
-    console.log("🔍 Debug - Passwords match:", hashedPassword === user.password);
-    
-    if (hashedPassword !== user.password) {
+    // Verificar contraseña con bcrypt
+    const isPasswordValid = await verifyPassword(password, user.password);
+
+    if (!isPasswordValid) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -140,32 +119,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
   } catch (error) {
     console.error("Auth error:", error);
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "Server error",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
-};
-
-// Manejar logout de admin (DELETE)
-export const DELETE: APIRoute = async ({ cookies }) => {
-  try {
-    // Limpiar la cookie de autenticación de admin
-    cookies.delete("auth-token");
-
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Logout error:", error);
 
     return new Response(
       JSON.stringify({
