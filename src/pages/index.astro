@@ -68,9 +68,6 @@ if (currentUser) {
           profundas de las series más populares y aclamadas de la televisión
           moderna.
         </p>
-
-        {/* Stats */}
-        <StatsDisplay client:load series={seriesData} />
       </div>
 
       {/* Series Grid with Filters */}
@@ -81,6 +78,14 @@ if (currentUser) {
         userWatchlist={userWatchlist}
         isAuthenticated={!!currentUser}
       />
+
+      {/* Stats Section */}
+      <div class="mt-16 text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-8">
+          Estadísticas de la Colección
+        </h2>
+        <StatsDisplay client:load series={seriesData} />
+      </div>
 
       {/* Empty State */}
       {

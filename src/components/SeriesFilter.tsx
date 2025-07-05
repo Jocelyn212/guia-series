@@ -97,11 +97,11 @@ export default function SeriesFilter({ series, onFilteredSeriesChange }: SeriesF
     <div className="mb-8">
       {/* Filter Categories */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Filtrar Series</h3>
+        
         
         {/* Status Filters */}
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-600 mb-3">Por Estado:</h4>
+          
           <div className="flex flex-wrap gap-2 justify-center">
             {filters.map((filter) => (
               <button
@@ -123,8 +123,7 @@ export default function SeriesFilter({ series, onFilteredSeriesChange }: SeriesF
         {/* Genre Filters */}
         {genreFilters.length > 0 && (
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-gray-600 mb-3">Por Género:</h4>
-            <div className="flex flex-wrap gap-2 justify-center">
+             <div className="flex flex-wrap gap-2 justify-center">
               {genreFilters.map((filter) => (
                 <button
                   key={filter.key}
@@ -146,7 +145,6 @@ export default function SeriesFilter({ series, onFilteredSeriesChange }: SeriesF
         {/* Platform Filters */}
         {platformFilters.length > 0 && (
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-gray-600 mb-3">Por Plataforma:</h4>
             <div className="flex flex-wrap gap-2 justify-center">
               {platformFilters.map((filter) => (
                 <button
