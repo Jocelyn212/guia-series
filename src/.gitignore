@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+#scripts para crear un usuario administrador
+create-admin.ts
