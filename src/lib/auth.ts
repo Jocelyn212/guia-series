@@ -1,7 +1,11 @@
 import jwt from "jsonwebtoken";
 import type { APIContext } from "astro";
 
-const JWT_SECRET = "mi-super-secreto-jwt-para-desarrollo-cambiar-en-produccion";
+// Obtener JWT_SECRET de las variables de entorno (igual que en api/auth.ts)
+const JWT_SECRET = 
+  typeof process !== "undefined" && process.env
+    ? process.env.JWT_SECRET
+    : import.meta.env.JWT_SECRET || "mi-super-secreto-jwt-para-desarrollo-cambiar-en-produccion";
 
 export interface AuthUser {
   userId: string;
