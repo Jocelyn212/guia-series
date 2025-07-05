@@ -20,11 +20,18 @@ function hashPassword(password: string): string {
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
+    // Debug: Log para verificar el entorno
+    console.log("🔍 Debug - Auth endpoint called");
+    console.log("🔍 JWT_SECRET existe:", !!JWT_SECRET);
+    console.log("🔍 JWT_SECRET length:", JWT_SECRET.length);
+    
     // Leer el body de forma segura
     const body = await request.json();
 
     const username = body?.username;
     const password = body?.password;
+
+    console.log("🔍 Debug - Login attempt for username:", username);
 
     if (!username || !password) {
       return new Response(
@@ -41,6 +48,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Buscar usuario en la base de datos
     const user = await getUserByCredentials(username);
+    console.log("🔍 Debug - User found:", !!user);
+    console.log("🔍 Debug - User role:", user?.role);
+    console.log("🔍 Debug - User isActive:", user?.isActive);
 
     if (!user) {
       return new Response(
@@ -86,6 +96,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Verificar contraseña
     const hashedPassword = hashPassword(password);
+    console.log("🔍 Debug - Password hash generated:", hashedPassword.substring(0, 20) + "...");
+    console.log("🔍 Debug - Stored password hash:", user.password.substring(0, 20) + "...");
+    console.log("🔍 Debug - Passwords match:", hashedPassword === user.password);
+    
     if (hashedPassword !== user.password) {
       return new Response(
         JSON.stringify({
