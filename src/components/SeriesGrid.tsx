@@ -6,9 +6,12 @@ import type { Serie } from '../lib/mongo'
 
 interface SeriesGridProps {
   initialSeries: Serie[]
+  userFavorites?: string[]
+  userWatchlist?: string[]
+  isAuthenticated?: boolean
 }
 
-export default function SeriesGrid({ initialSeries }: SeriesGridProps) {
+export default function SeriesGrid({ initialSeries, userFavorites = [], userWatchlist = [], isAuthenticated = false }: SeriesGridProps) {
   const [filteredSeries, setFilteredSeries] = useState<Serie[]>(initialSeries)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentFilter, setCurrentFilter] = useState<Serie[]>(initialSeries)
@@ -89,6 +92,9 @@ export default function SeriesGrid({ initialSeries }: SeriesGridProps) {
             posterUrl={serie.posterUrl}
             platforms={serie.platforms}
             slug={serie.slug}
+            isFavorite={userFavorites.includes(serie.slug)}
+            isInWatchlist={userWatchlist.includes(serie.slug)}
+            isAuthenticated={isAuthenticated}
           />
         ))}
       </div>

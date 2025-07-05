@@ -1,4 +1,4 @@
-import { connectMongoDB } from "../lib/mongo";
+/* import { connectMongoDB } from "../lib/mongo";
 import mongoose from "mongoose";
 import { hashPassword } from "../lib/password";
 
@@ -50,4 +50,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   fixAdminPassword();
 }
 
-export { fixAdminPassword };
+export { fixAdminPassword }; */

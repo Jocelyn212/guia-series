@@ -17,6 +17,9 @@ interface SerieCardProps {
     isPremium: boolean
   }>
   slug: string
+  isFavorite?: boolean
+  isInWatchlist?: boolean
+  isAuthenticated?: boolean
 }
 
 export default function SerieCard({
@@ -30,10 +33,14 @@ export default function SerieCard({
   imdbRating,
   posterUrl,
   platforms,
-  slug
+  slug,
+  isFavorite: initialIsFavorite = false,
+  isInWatchlist: initialIsInWatchlist = false,
+  isAuthenticated = false
 }: SerieCardProps): ReactElement {
-  const [isLiked, setIsLiked] = useState(false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [isLiked, setIsLiked] = useState(initialIsFavorite)
+  const [isBookmarked, setIsBookmarked] = useState(initialIsInWatchlist)
+  const [isLoading, setIsLoading] = useState(false)
 
   const statusColor = {
     ongoing: 'bg-green-500',
@@ -47,16 +54,94 @@ export default function SerieCard({
     cancelled: 'Cancelada'
   }[status]
 
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsLiked(!isLiked)
+    
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para marcar como favorita')
+      return
+    }
+    
+    if (isLoading) return
+    
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          serieSlug: slug,
+          action: isLiked ? 'remove' : 'add'
+        })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setIsLiked(!isLiked)
+        } else {
+          alert('Error al actualizar favoritos: ' + result.error)
+        }
+      } else {
+        const error = await response.json()
+        alert('Error: ' + error.error)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error de conexión')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleBookmark = (e: React.MouseEvent) => {
+  const handleBookmark = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsBookmarked(!isBookmarked)
+    
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para agregar a tu lista')
+      return
+    }
+    
+    if (isLoading) return
+    
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          serieSlug: slug,
+          action: isBookmarked ? 'remove' : 'add'
+        })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setIsBookmarked(!isBookmarked)
+        } else {
+          alert('Error al actualizar lista: ' + result.error)
+        }
+      } else {
+        const error = await response.json()
+        alert('Error: ' + error.error)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error de conexión')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -89,7 +174,9 @@ export default function SerieCard({
         <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button
             onClick={handleLike}
-            className={`p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
+            disabled={isLoading}
+            title={isLiked ? "Quitar de favoritas" : "Marcar como favorita"}
+            className={`p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${
               isLiked ? 'bg-red-500 text-white' : 'bg-white text-gray-700 hover:bg-red-50'
             }`}
           >
@@ -100,7 +187,9 @@ export default function SerieCard({
           
           <button
             onClick={handleBookmark}
-            className={`p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 ${
+            disabled={isLoading}
+            title={isBookmarked ? "Quitar de mi lista" : "Agregar a mi lista"}
+            className={`p-2 rounded-full shadow-lg transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${
               isBookmarked ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-blue-50'
             }`}
           >

@@ -1,4 +1,4 @@
-import { createUser } from "../lib/mongo";
+/* import { createUser } from "../lib/mongo";
 import { hashPassword } from "../lib/password";
 
 async function createAdminUser() {
@@ -49,3 +49,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export { createAdminUser };
+ */

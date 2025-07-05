@@ -2,7 +2,7 @@
 import SeriesGrid from "../components/SeriesGrid";
 import StatsDisplay from "../components/StatsDisplay";
 import UserNav from "../components/UserNav.astro";
-import { getSeries } from "../lib/mongo";
+import { getSeries, getUserById } from "../lib/mongo";
 import { getPublicAuthUser } from "../lib/publicAuth";
 import "../styles/global.css";
 
@@ -11,6 +11,15 @@ const seriesData = await getSeries();
 
 // Verificar si hay un usuario logueado
 const currentUser = getPublicAuthUser(Astro.request);
+
+// Obtener favoritos y watchlist del usuario si está logueado
+let userFavorites: string[] = [];
+let userWatchlist: string[] = [];
+if (currentUser) {
+  const userDetails = await getUserById(currentUser.id);
+  userFavorites = userDetails?.favoritesSeries || [];
+  userWatchlist = userDetails?.watchlistSeries || [];
+}
 ---
 
 <!doctype html>
@@ -65,7 +74,13 @@ const currentUser = getPublicAuthUser(Astro.request);
       </div>
 
       {/* Series Grid with Filters */}
-      <SeriesGrid client:load initialSeries={seriesData} />
+      <SeriesGrid
+        client:load
+        initialSeries={seriesData}
+        userFavorites={userFavorites}
+        userWatchlist={userWatchlist}
+        isAuthenticated={!!currentUser}
+      />
 
       {/* Empty State */}
       {

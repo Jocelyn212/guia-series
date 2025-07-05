@@ -15,6 +15,9 @@ interface FringeCardProps {
   likes: number
   publishedAt?: Date
   slug?: string
+  analysisId?: string
+  isLiked?: boolean
+  isAuthenticated?: boolean
 }
 
 export default function FringeCard({
@@ -27,12 +30,16 @@ export default function FringeCard({
   views: initialViews,
   likes: initialLikes,
   publishedAt,
-  slug
+  slug,
+  analysisId,
+  isLiked: initialIsLiked = false,
+  isAuthenticated = false
 }: FringeCardProps): ReactElement {
   const [views, setViews] = useState(initialViews)
   const [likes, setLikes] = useState(initialLikes)
-  const [hasLiked, setHasLiked] = useState(false)
+  const [hasLiked, setHasLiked] = useState(initialIsLiked)
   const [hasViewed, setHasViewed] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Colores elegantes y profesionales en lugar de azul/rojo fuertes
   const bgColor = universe === 'blue' ? 'bg-slate-600' : 'bg-purple-600'
@@ -46,16 +53,54 @@ export default function FringeCard({
     }
   }
 
-  // Manejar like/unlike
-  const handleLike = (e: React.MouseEvent) => {
+  // Manejar like/unlike con API real
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation() // Prevenir que se active el clic de la tarjeta
     
-    if (hasLiked) {
-      setLikes(prev => prev - 1)
-      setHasLiked(false)
-    } else {
-      setLikes(prev => prev + 1)
-      setHasLiked(true)
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para dar like a un análisis')
+      return
+    }
+    
+    if (!analysisId) {
+      alert('Error: ID de análisis no disponible')
+      return
+    }
+    
+    if (isLoading) return
+    
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/likes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          analysisId,
+          action: hasLiked ? 'remove' : 'add'
+        })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setHasLiked(!hasLiked)
+          setLikes(prev => hasLiked ? prev - 1 : prev + 1)
+        } else {
+          alert('Error al actualizar like: ' + result.error)
+        }
+      } else {
+        const error = await response.json()
+        alert('Error: ' + error.error)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error de conexión')
+    } finally {
+      setIsLoading(false)
     }
   }
   
@@ -115,7 +160,8 @@ export default function FringeCard({
           
           <button 
             onClick={handleLike}
-            className={`flex items-center space-x-1 transition-all duration-200 hover:scale-110 ${
+            disabled={isLoading}
+            className={`flex items-center space-x-1 transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed ${
               hasLiked ? 'text-red-300' : 'text-gray-300 hover:text-red-300'
             }`}
           >

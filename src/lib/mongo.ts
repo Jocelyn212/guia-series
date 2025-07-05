@@ -91,7 +91,8 @@ export interface User {
   password: string;
   role: "admin" | "user";
   isActive: boolean;
-  favoritesSeries: string[]; // Array de slugs de series favoritas
+  favoritesSeries: string[]; // Array de slugs de series favoritas (❤️)
+  watchlistSeries: string[]; // Array de slugs de series guardadas para ver después (🔖)
   watchedSeries: string[]; // Array de slugs de series vistas
   likedAnalysis: string[]; // Array de IDs de análisis que le gustaron
   createdAt?: Date;
@@ -195,7 +196,8 @@ const UserSchema = new Schema<User>(
     password: { type: String, required: true },
     role: { type: String, enum: ["admin", "user"], default: "user" },
     isActive: { type: Boolean, default: true },
-    favoritesSeries: [{ type: String }], // Array de slugs de series favoritas
+    favoritesSeries: [{ type: String }], // Array de slugs de series favoritas (❤️)
+    watchlistSeries: [{ type: String }], // Array de slugs de series guardadas para ver después (🔖)
     watchedSeries: [{ type: String }], // Array de slugs de series vistas
     likedAnalysis: [{ type: String }], // Array de IDs de análisis que le gustaron
     lastLogin: { type: Date },
@@ -569,6 +571,7 @@ export async function registerUser(userData: {
       role: "user",
       isActive: true,
       favoritesSeries: [],
+      watchlistSeries: [],
       watchedSeries: [],
       likedAnalysis: [],
       createdAt: new Date(),
@@ -833,6 +836,46 @@ export async function updateUserPassword(
     return !!result;
   } catch (error) {
     console.error("Error updating user password:", error);
+    return false;
+  }
+}
+
+// Agregar serie a la watchlist del usuario
+export async function addUserWatchlistSerie(
+  userId: string,
+  serieSlug: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+    const result = await UserModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { watchlistSeries: serieSlug } },
+      { new: true }
+    ).exec();
+    return !!result;
+  } catch (error) {
+    console.error("Error adding serie to watchlist:", error);
+    return false;
+  }
+}
+
+// Quitar serie de la watchlist del usuario
+export async function removeUserWatchlistSerie(
+  userId: string,
+  serieSlug: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+    const result = await UserModel.findByIdAndUpdate(
+      userId,
+      { $pull: { watchlistSeries: serieSlug } },
+      { new: true }
+    ).exec();
+    return !!result;
+  } catch (error) {
+    console.error("Error removing serie from watchlist:", error);
     return false;
   }
 }

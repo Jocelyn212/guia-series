@@ -126,6 +126,27 @@ const favoriteSeries = allSeries.filter((serie) =>
                       Ver Detalles
                     </a>
                     <button
+                      class={`border-2 p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed ${
+                        userData.watchlistSeries?.includes(serie.slug)
+                          ? "bg-blue-500 border-blue-500 text-white"
+                          : "border-blue-500 text-blue-500 hover:bg-blue-50"
+                      }`}
+                      data-serie={serie.slug}
+                      data-action={
+                        userData.watchlistSeries?.includes(serie.slug)
+                          ? "remove"
+                          : "add"
+                      }
+                      onclick="toggleWatchlist(this)"
+                      title={
+                        userData.watchlistSeries?.includes(serie.slug)
+                          ? "Quitar de Mi Lista"
+                          : "Agregar a Mi Lista"
+                      }
+                    >
+                      🔖
+                    </button>
+                    <button
                       class="border-2 bg-red-500 border-red-500 text-white p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
                       data-serie={serie.slug}
                       data-action="remove"
@@ -217,6 +238,59 @@ const favoriteSeries = allSeries.filter((serie) =>
 
       // Hacer la función global
       (window as any).toggleFavorite = toggleFavorite;
+
+      // Función para manejar la watchlist
+      async function toggleWatchlist(button: HTMLButtonElement) {
+        if (button.disabled) return;
+
+        button.disabled = true;
+        const originalText = button.textContent;
+
+        try {
+          const serieSlug = button.dataset.serie;
+          const action = button.dataset.action;
+
+          const response = await fetch("/api/watchlist", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({ serieSlug, action }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              // Actualizar el botón según la acción
+              if (action === "add") {
+                button.className =
+                  "border-2 bg-blue-500 border-blue-500 text-white p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed";
+                button.dataset.action = "remove";
+                button.title = "Quitar de Mi Lista";
+              } else {
+                button.className =
+                  "border-2 border-blue-500 text-blue-500 hover:bg-blue-50 p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed";
+                button.dataset.action = "add";
+                button.title = "Agregar a Mi Lista";
+              }
+            } else {
+              alert("Error al actualizar Mi Lista: " + result.error);
+            }
+          } else {
+            const error = await response.json();
+            alert("Error: " + error.error);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Error de conexión");
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      // Hacer la función global
+      (window as any).toggleWatchlist = toggleWatchlist;
     </script>
   </body>
 </html>
