@@ -81,15 +81,17 @@ export function getServerAuthUser(request: Request): AuthUser | null {
 
   const cookies = cookieHeader.split(";").reduce((acc, cookie) => {
     const [name, value] = cookie.trim().split("=");
-    acc[name] = value;
+    acc[name] = decodeURIComponent(value || "");
     return acc;
   }, {} as Record<string, string>);
-
+  
   const token = cookies["auth-token"];
 
   if (!token) {
     return null;
   }
 
-  return verifyToken(token);
+  const user = verifyToken(token);
+  
+  return user;
 }

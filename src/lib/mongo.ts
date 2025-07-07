@@ -47,6 +47,7 @@ export interface Serie {
     available: boolean;
     isPremium: boolean;
   }>;
+  lgbtqContent?: boolean; // Indica si la serie tiene contenido LGBTIQ+
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -145,6 +146,7 @@ const SerieSchema = new Schema<Serie>(
         isPremium: { type: Boolean, required: true },
       },
     ],
+    lgbtqContent: { type: Boolean, default: false }, // Campo para contenido LGBTIQ+
   },
   {
     ...schemaOptions,
@@ -877,5 +879,61 @@ export async function removeUserWatchlistSerie(
   } catch (error) {
     console.error("Error removing serie from watchlist:", error);
     return false;
+  }
+}
+
+// Función para obtener actividad reciente
+export async function getRecentActivity() {
+  try {
+    await connectMongoDB();
+    
+    const activities = [];
+    
+    // Obtener las últimas 3 series agregadas
+    if (SerieModel) {
+      const recentSeries = await SerieModel.find()
+        .sort({ _id: -1 })
+        .limit(3)
+        .lean()
+        .exec();
+      
+      recentSeries.forEach(serie => {
+        activities.push({
+          type: 'serie_added',
+          title: `Nueva serie agregada: ${serie.title}`,
+          description: `Se agregó "${serie.title}" (${serie.startYear}) al catálogo`,
+          timestamp: serie._id?.getTimestamp() || new Date(),
+          icon: '📺'
+        });
+      });
+    }
+    
+    // Obtener los últimos 3 análisis agregados
+    if (AnalisisModel) {
+      const recentAnalysis = await AnalisisModel.find()
+        .sort({ _id: -1 })
+        .limit(3)
+        .lean()
+        .exec();
+      
+      recentAnalysis.forEach(analysis => {
+        activities.push({
+          type: 'analysis_added',
+          title: `Nuevo análisis publicado: ${analysis.title}`,
+          description: `Se publicó un análisis sobre "${analysis.title}"`,
+          timestamp: analysis._id?.getTimestamp() || new Date(),
+          icon: '📖'
+        });
+      });
+    }
+    
+    // Ordenar por timestamp descendente y tomar las últimas 5 actividades
+    return activities
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 5);
+      
+  } catch (error) {
+    console.error("Error fetching recent activity:", error);
+    return [];
   }
 }

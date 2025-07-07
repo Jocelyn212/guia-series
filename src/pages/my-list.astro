@@ -1,7 +1,7 @@
 ---
 import { getUserById, getSerieBySlug } from "../lib/mongo";
 import { getPublicAuthUser } from "../lib/publicAuth";
-import UserNav from "../components/UserNav.astro";
+import ResponsiveNav from "../components/ResponsiveNav.astro";
 import "../styles/global.css";
 
 // Verificar autenticación
@@ -45,22 +45,7 @@ if (userData.watchlistSeries && userData.watchlistSeries.length > 0) {
   </head>
   <body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-md">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <a href="/" class="text-xl font-bold text-slate-700">📺 SeriesGuide</a>
-          </div>
-          <div class="flex items-center space-x-4">
-            <a href="/" class="text-gray-600 hover:text-slate-700 transition-colors">Series</a>
-            <a href="/analisis" class="text-gray-600 hover:text-slate-700 transition-colors">Análisis</a>
-            <a href="/my-favorites" class="text-gray-600 hover:text-slate-700 transition-colors">Favoritos</a>
-            <a href="/my-list" class="text-slate-700 font-medium">Mi Lista</a>
-            <UserNav />
-          </div>
-        </div>
-      </div>
-    </nav>
+    <ResponsiveNav />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}

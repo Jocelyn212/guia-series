@@ -6,7 +6,7 @@ interface SeriesFilterProps {
   onFilteredSeriesChange: (filteredSeries: Serie[]) => void
 }
 
-type FilterType = 'all' | 'ongoing' | 'ended' | 'cancelled' | string
+type FilterType = 'all' | 'ongoing' | 'ended' | 'cancelled' | 'lgbtq' | string
 
 export default function SeriesFilter({ series, onFilteredSeriesChange }: SeriesFilterProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
@@ -39,6 +39,13 @@ export default function SeriesFilter({ series, onFilteredSeriesChange }: SeriesF
       case 'cancelled':
         filteredSeries = series.filter(serie => serie.status === 'cancelled')
         break
+      case 'lgbtq':
+        // Filtro híbrido: buscar tanto en lgbtqContent como en géneros que contengan "LGBTIQ+"
+        filteredSeries = series.filter(serie => 
+          serie.lgbtqContent === true || 
+          serie.genre.some(g => g.toLowerCase().includes('lgbtiq'))
+        )
+        break
       default:
         // Filtrar por género
         if (allGenres.includes(filter)) {
@@ -63,6 +70,10 @@ export default function SeriesFilter({ series, onFilteredSeriesChange }: SeriesF
     { key: 'ongoing', label: 'En Emisión', count: series.filter(s => s.status === 'ongoing').length },
     { key: 'ended', label: 'Finalizadas', count: series.filter(s => s.status === 'ended').length },
     { key: 'cancelled', label: 'Canceladas', count: series.filter(s => s.status === 'cancelled').length },
+    { key: 'lgbtq', label: '🏳️‍🌈 LGBTIQ+', count: series.filter(s => 
+        s.lgbtqContent === true || 
+        s.genre.some(g => g.toLowerCase().includes('lgbtiq'))
+      ).length },
   ]
 
   // Agregar géneros principales como filtros
@@ -109,8 +120,12 @@ export default function SeriesFilter({ series, onFilteredSeriesChange }: SeriesF
                 onClick={() => handleFilterChange(filter.key)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   activeFilter === filter.key
-                    ? 'bg-blue-600 text-white shadow-lg transform scale-105'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-md'
+                    ? filter.key === 'lgbtq'
+                      ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg transform scale-105'
+                      : 'bg-blue-600 text-white shadow-lg transform scale-105'
+                    : filter.key === 'lgbtq'
+                      ? 'bg-gradient-to-r from-pink-100 to-purple-100 text-purple-700 hover:from-pink-200 hover:to-purple-200 hover:shadow-md'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-md'
                 }`}
               >
                 {filter.label}

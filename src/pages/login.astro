@@ -2,6 +2,9 @@
 import { getServerAuthUser } from "../lib/auth";
 import "../styles/global.css";
 
+// Limpiar cualquier sesión de usuario público al acceder al login
+Astro.cookies.delete("public-auth-token");
+
 // Si ya está logueado, redirigir a admin
 const user = getServerAuthUser(Astro.request);
 

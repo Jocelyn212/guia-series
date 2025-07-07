@@ -2,7 +2,7 @@
 import { getPublicAuthUser } from "../lib/publicAuth";
 import { getUserById, getSeries } from "../lib/mongo";
 import "../styles/global.css";
-import UserNav from "../components/UserNav.astro";
+import ResponsiveNav from "../components/ResponsiveNav.astro";
 
 // Verificar autenticación
 const currentUser = getPublicAuthUser(Astro.request);
@@ -31,32 +31,8 @@ const favoriteSeries = allSeries.filter((serie) =>
     <title>Mis Favoritos - SeriesGuide</title>
   </head>
   <body class="bg-gray-50">
-    {/* Navigation */}
-    <nav class="bg-white shadow-md">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <a href="/" class="text-xl font-bold text-slate-700"
-              >📺 SeriesGuide</a
-            >
-          </div>
-          <div class="flex items-center space-x-4">
-            <a
-              href="/"
-              class="text-gray-600 hover:text-slate-700 transition-colors"
-              >Series</a
-            >
-            <a
-              href="/analisis"
-              class="text-gray-600 hover:text-slate-700 transition-colors"
-              >Análisis</a
-            >
-
-            <UserNav />
-          </div>
-        </div>
-      </div>
-    </nav>
+    <!-- Navigation -->
+    <ResponsiveNav />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="text-center mb-8">

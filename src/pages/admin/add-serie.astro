@@ -136,6 +136,28 @@ const user = protectAdminPage(Astro.request);
                 />
               </div>
             </div>
+
+            <!-- Campo LGTBI+ -->
+            <div class="mt-6">
+              <div class="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="lgbtqContent"
+                  name="lgbtqContent"
+                  class="w-5 h-5 text-pink-600 bg-gray-700 border-gray-600 rounded focus:ring-pink-500 focus:ring-2"
+                />
+                <label
+                  for="lgbtqContent"
+                  class="text-sm font-medium text-gray-300 flex items-center space-x-2"
+                >
+                  <span>🏳️‍🌈</span>
+                  <span>Contenido LGBTIQ+ destacado</span>
+                </label>
+              </div>
+              <p class="text-xs text-gray-400 mt-1 ml-8">
+                Marca esta casilla si la serie incluye personajes principales LGBTIQ+ o temáticas relevantes para la comunidad.
+              </p>
+            </div>
           </div>
 
           <!-- Detalles de Producción -->
@@ -428,6 +450,7 @@ const user = protectAdminPage(Astro.request);
             ),
             posterUrl: formData.get("posterUrl") || "",
             backdropUrl: formData.get("backdropUrl") || "",
+            lgbtqContent: formData.get("lgbtqContent") === "on", // Convertir checkbox a boolean
             platforms: [],
           };
 

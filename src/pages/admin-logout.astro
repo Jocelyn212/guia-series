@@ -1,21 +1,21 @@
 ---
 // Logout específico para admin
-import { getServerAuthUser } from "../lib/auth";
+console.log("🔍 [admin-logout] Iniciando logout de admin");
 
-// Verificar que sea un admin
-const user = getServerAuthUser(Astro.request);
+// Limpiar cookie de admin usando Astro.cookies
+Astro.cookies.delete("auth-token", {
+  path: "/",
+  httpOnly: true,
+});
 
-if (user && user.role === "admin") {
-  // Crear respuesta que elimine la cookie y redirija
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: "/login",
-      "Set-Cookie": "auth-token=; Path=/; HttpOnly; Max-Age=0",
-    },
-  });
-} else {
-  // Si no es admin, redirigir al login directamente
-  return Astro.redirect("/login");
-}
+// También limpiar cualquier cookie de usuario público
+Astro.cookies.delete("public-auth-token", {
+  path: "/",
+  httpOnly: true,
+});
+
+console.log("✅ [admin-logout] Cookies eliminadas, redirigiendo a login");
+
+// Redirigir al login
+return Astro.redirect("/login");
 ---

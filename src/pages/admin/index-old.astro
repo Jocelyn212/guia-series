@@ -1,0 +1,379 @@
+---
+import { protectAdminPage } from "../../lib/adminSecurity";
+import { getSeries, getAnalisis } from "../../lib/mongo";
+import "../../styles/global.css";
+
+// Proteger página de administración
+const protection = protectAdminPage(Astro.request);
+if (protection instanceof Response) {
+  return protection;
+}
+const user = protection;
+
+// Obtener estadísticas
+let totalSeries = 0;
+let totalAnalisis = 0;
+let error = "";
+
+try {
+  const series = await getSeries();
+  const analisis = await getAnalisis();
+  totalSeries = series.length;
+  totalAnalisis = analisis.length;
+} catch (err) {
+  error = "Error cargando estadísticas";
+  console.error("Error loading admin stats:", err);
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Administración - SeriesGuide</title>
+    <meta name="description" content="Panel de administración de SeriesGuide" />
+  </head>
+  <body class="bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Panel de Administración</h1>
+          <p class="text-gray-400 text-sm sm:text-base">
+            Bienvenido, {user.username} - Gestiona el contenido de SeriesGuide
+          </p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <a
+            href="/"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-center"
+          >
+            Ver sitio
+          </a>
+          <form method="POST" action="/api/auth" class="inline">
+            <input type="hidden" name="action" value="logout" />
+            <button
+              type="submit"
+              class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Cerrar sesión
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Error Display -->
+      {error && (
+        <div class="mb-6 bg-red-500 text-white p-4 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span class="text-xl">📺</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-400">Total Series</p>
+              <p class="text-2xl font-bold text-white">{totalSeries}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                <span class="text-xl">📝</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-gray-400">Total Análisis</p>
+              <p class="text-2xl font-bold text-white">{totalAnalisis}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-gray-800 rounded-lg border border-gray-700 p-6 mb-8">
+        <h2 class="text-xl font-bold text-white mb-4">Acciones Rápidas</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <a
+            href="/admin/add-serie"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-colors text-center"
+          >
+            + Nueva Serie
+          </a>
+          <a
+            href="/admin/manage-series"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-colors text-center"
+          >
+            Gestionar Series
+          </a>
+          <a
+            href="/admin/add-analysis"
+            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-medium transition-colors text-center"
+          >
+            + Nuevo Análisis
+          </a>
+          <a
+            href="/admin/manage-analysis"
+            class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg font-medium transition-colors text-center"
+          >
+            Gestionar Análisis
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-gray-800 rounded-lg border border-gray-700 p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Estado del Sistema</h2>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-400">Base de datos</span>
+            <span class="text-green-400 font-medium">✓ Conectada</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-400">Autenticación</span>
+            <span class="text-green-400 font-medium">✓ Activa</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-400">Cache</span>
+            <span class="text-green-400 font-medium">✓ Funcionando</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a href="/admin" class="text-xl font-bold text-blue-600">
+              �️ Admin Panel
+            </a>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-gray-700">Bienvenido, {user.username}</span>
+            <a href="/" class="text-blue-600 hover:text-blue-800">Ver sitio</a>
+            <form method="POST" action="/api/auth" class="inline">
+              <input type="hidden" name="action" value="logout" />
+              <button
+                type="submit"
+                class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Cerrar Sesión
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Dashboard Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Panel de Administración</h1>
+        <p class="text-gray-600 mt-2">Gestiona el contenido de SeriesGuide</p>
+      </div>
+
+      <!-- Error Display -->
+      {error && (
+        <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                  📺
+                </div>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Total Series
+                  </dt>
+                  <dd class="text-lg font-medium text-gray-900">
+                    {totalSeries}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                  📝
+                </div>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Total Análisis
+                  </dt>
+                  <dd class="text-lg font-medium text-gray-900">
+                    {totalAnalisis}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                  👥
+                </div>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Usuarios Activos
+                  </dt>
+                  <dd class="text-lg font-medium text-gray-900">-</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-5">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                  ⭐
+                </div>
+              </div>
+              <div class="ml-5 w-0 flex-1">
+                <dl>
+                  <dt class="text-sm font-medium text-gray-500 truncate">
+                    Valoraciones
+                  </dt>
+                  <dd class="text-lg font-medium text-gray-900">-</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Manage Series -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  📺
+                </div>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Gestionar Series</h3>
+                <p class="text-sm text-gray-500">Agregar, editar y eliminar series</p>
+              </div>
+            </div>
+            <div class="mt-4">
+              <a
+                href="/admin/manage-series"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+              >
+                Gestionar Series
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manage Analysis -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  📝
+                </div>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Gestionar Análisis</h3>
+                <p class="text-sm text-gray-500">Crear y editar análisis de series</p>
+              </div>
+            </div>
+            <div class="mt-4">
+              <a
+                href="/admin/manage-analisis"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
+              >
+                Gestionar Análisis
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Stats -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="p-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  📊
+                </div>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Estadísticas</h3>
+                <p class="text-sm text-gray-500">Ver métricas del sistema</p>
+              </div>
+            </div>
+            <div class="mt-4">
+              <button
+                disabled
+                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-100 cursor-not-allowed"
+              >
+                Próximamente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="mt-8">
+        <div class="bg-white shadow rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+              Actividad Reciente
+            </h3>
+            <div class="text-sm text-gray-500">
+              <p>• Sistema de autenticación modernizado ✅</p>
+              <p>• Implementados favoritos y listas de guardados ✅</p>
+              <p>• Filtro LGBTIQ+ agregado ✅</p>
+              <p>• Interfaz móvil mejorada ✅</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
