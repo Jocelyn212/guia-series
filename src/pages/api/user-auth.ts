@@ -68,18 +68,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     // Verificar contraseña con migración automática
-    console.log("🔍 Debug - Usuario encontrado:", user.username);
-    console.log(
-      "🔍 Debug - Hash almacenado:",
-      user.password.substring(0, 20) + "..."
-    );
-    console.log("🔍 Debug - Longitud hash:", user.password.length);
-
     const passwordResult = await verifyPasswordWithMigration(
       password,
       user.password
     );
-    console.log("🔍 Debug - Resultado verificación:", passwordResult);
 
     if (!passwordResult.isValid) {
       return new Response(
@@ -104,12 +96,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         (user._id as any).toString(),
         passwordResult.newHash
       );
-      console.log(
-        "✅ Contraseña migrada a bcrypt para usuario:",
-        user.username
-      );
-    } else {
-      console.log("ℹ️ Usuario ya usa bcrypt:", user.username);
     }
 
     // Login exitoso para usuario público

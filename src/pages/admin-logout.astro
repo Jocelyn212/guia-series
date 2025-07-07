@@ -1,6 +1,5 @@
 ---
 // Logout específico para admin
-console.log("🔍 [admin-logout] Iniciando logout de admin");
 
 // Limpiar cookie de admin usando Astro.cookies
 Astro.cookies.delete("auth-token", {
@@ -13,8 +12,6 @@ Astro.cookies.delete("public-auth-token", {
   path: "/",
   httpOnly: true,
 });
-
-console.log("✅ [admin-logout] Cookies eliminadas, redirigiendo a login");
 
 // Redirigir al login
 return Astro.redirect("/login");

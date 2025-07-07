@@ -32,9 +32,6 @@ async function createAdminUser() {
       console.log("Username:", result.username);
       console.log("Email:", result.email);
       console.log("Role:", result.role);
-      console.log("📋 Credenciales de login:");
-      console.log("   Username:", adminUsername);
-      console.log("   Password:", adminPassword);
     } else {
       console.log("❌ Error al crear el usuario administrador");
     }
