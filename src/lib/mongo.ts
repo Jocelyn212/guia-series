@@ -883,17 +883,17 @@ export async function removeUserWatchlistSerie(
 }
 
 // Función para obtener actividad reciente
+export interface Activity {
+  type: string;
+  title: string;
+  description: string;
+  timestamp: Date;
+  icon: string;
+}
+
 export async function getRecentActivity() {
   try {
     await connectMongoDB();
-
-    interface Activity {
-      type: string;
-      title: string;
-      description: string;
-      timestamp: Date;
-      icon: string;
-    }
 
     const activities: Activity[] = [];
 

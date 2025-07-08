@@ -84,7 +84,7 @@ export function getServerAuthUser(request: Request): AuthUser | null {
     acc[name] = decodeURIComponent(value || "");
     return acc;
   }, {} as Record<string, string>);
-  
+
   const token = cookies["auth-token"];
 
   if (!token) {

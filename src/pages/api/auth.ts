@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import jwt from "jsonwebtoken";
-import { getUserByCredentials } from "../../lib/mongo";
-import { verifyPassword } from "../../lib/password";
+import { getUserByCredentials, updateUserPassword } from "../../lib/mongo";
+import { verifyPasswordWithMigration } from "../../lib/password";
 
 // Obtener JWT_SECRET de las variables de entorno
 const JWT_SECRET =
@@ -76,10 +76,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       );
     }
 
-    // Verificar contraseña con bcrypt
-    const isPasswordValid = await verifyPassword(password, user.password);
+    // Verificar contraseña con migración automática desde método antiguo
+    const passwordResult = await verifyPasswordWithMigration(
+      password,
+      user.password
+    );
 
-    if (!isPasswordValid) {
+    if (!passwordResult.isValid) {
       return new Response(
         JSON.stringify({
           success: false,
