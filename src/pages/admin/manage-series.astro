@@ -205,7 +205,8 @@ try {
           <h2 class="text-lg sm:text-xl font-bold text-white">Editar Serie</h2>
           <button
             onclick="closeEditModal()"
-            class="text-gray-400 hover:text-white text-2xl"
+            class="text-gray-400 hover:text-white text-2xl sm:text-3xl p-2 sm:p-1 min-w-[40px] min-h-[40px] flex items-center justify-center"
+            aria-label="Cerrar modal"
           >
             &times;
           </button>
@@ -506,7 +507,8 @@ try {
         document.getElementById("editModal").style.display = "flex";
       }
 
-      function closeEditModal() {
+      // Funciones globales para el modal
+      window.closeEditModal = function() {
         document.getElementById("editModal").classList.add("hidden");
         document.getElementById("editModal").style.display = "none";
       }
