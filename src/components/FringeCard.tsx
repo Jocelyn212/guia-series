@@ -46,10 +46,25 @@ export default function FringeCard({
   const badgeColor = universe === 'blue' ? 'bg-slate-100 text-slate-700' : 'bg-purple-100 text-purple-700'
   
   // Simular incremento de vista al hacer clic en la tarjeta
-  const handleCardClick = () => {
-    if (!hasViewed) {
+  const handleCardClick = async () => {
+    if (!hasViewed && analysisId) {
       setViews(prev => prev + 1)
       setHasViewed(true)
+      
+      // Llamar a la API para incrementar vistas
+      try {
+        await fetch('/api/views', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            analysisId: analysisId
+          })
+        })
+      } catch (error) {
+        console.error('Error incrementando vistas:', error)
+      }
     }
   }
 

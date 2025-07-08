@@ -42,6 +42,7 @@ export interface Serie {
   imdbRating: number;
   posterUrl?: string;
   backdropUrl?: string;
+  trailerUrl?: string; // URL del trailer de la serie
   platforms: Array<{
     name: string;
     available: boolean;
@@ -139,6 +140,7 @@ const SerieSchema = new Schema<Serie>(
     imdbRating: { type: Number, required: true },
     posterUrl: { type: String },
     backdropUrl: { type: String },
+    trailerUrl: { type: String }, // URL del trailer de la serie
     platforms: [
       {
         name: { type: String, required: true },
@@ -629,6 +631,64 @@ export async function toggleFavoriteSerie(
   }
 }
 
+// Agregar serie a favoritos
+export async function addUserFavoriteSerie(
+  userId: string,
+  serieSlug: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+
+    const user = await UserModel.findById(userId);
+    if (!user) return false;
+
+    // Verificar si ya está en favoritos
+    if (user.favoritesSeries.includes(serieSlug)) {
+      return true; // Ya está en favoritos
+    }
+
+    // Agregar a favoritos
+    user.favoritesSeries.push(serieSlug);
+    await user.save();
+
+    return true;
+  } catch (error) {
+    console.error("Error adding favorite serie:", error);
+    return false;
+  }
+}
+
+// Quitar serie de favoritos
+export async function removeUserFavoriteSerie(
+  userId: string,
+  serieSlug: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+
+    const user = await UserModel.findById(userId);
+    if (!user) return false;
+
+    // Verificar si está en favoritos
+    if (!user.favoritesSeries.includes(serieSlug)) {
+      return true; // No está en favoritos
+    }
+
+    // Quitar de favoritos
+    user.favoritesSeries = user.favoritesSeries.filter(
+      (slug) => slug !== serieSlug
+    );
+    await user.save();
+
+    return true;
+  } catch (error) {
+    console.error("Error removing favorite serie:", error);
+    return false;
+  }
+}
+
 // Agregar/quitar like de análisis
 export async function toggleAnalysisLike(
   userId: string,
@@ -663,6 +723,64 @@ export async function toggleAnalysisLike(
   }
 }
 
+// Agregar like a un análisis
+export async function addUserLikedAnalysis(
+  userId: string,
+  analysisId: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel || !AnalisisModel) return false;
+
+    const user = await UserModel.findById(userId);
+    if (!user) return false;
+
+    // Verificar si ya le dio like
+    if (user.likedAnalysis.includes(analysisId)) {
+      return true; // Ya le dio like
+    }
+
+    // Agregar like
+    user.likedAnalysis.push(analysisId);
+    await AnalisisModel.findByIdAndUpdate(analysisId, { $inc: { likes: 1 } });
+    await user.save();
+
+    return true;
+  } catch (error) {
+    console.error("Error adding analysis like:", error);
+    return false;
+  }
+}
+
+// Quitar like a un análisis
+export async function removeUserLikedAnalysis(
+  userId: string,
+  analysisId: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel || !AnalisisModel) return false;
+
+    const user = await UserModel.findById(userId);
+    if (!user) return false;
+
+    // Verificar si tiene like
+    if (!user.likedAnalysis.includes(analysisId)) {
+      return true; // No tiene like
+    }
+
+    // Quitar like
+    user.likedAnalysis = user.likedAnalysis.filter((id) => id !== analysisId);
+    await AnalisisModel.findByIdAndUpdate(analysisId, { $inc: { likes: -1 } });
+    await user.save();
+
+    return true;
+  } catch (error) {
+    console.error("Error removing analysis like:", error);
+    return false;
+  }
+}
+
 // Marcar serie como vista
 export async function markSerieAsWatched(
   userId: string,
@@ -687,7 +805,9 @@ export async function markSerieAsWatched(
   }
 }
 
-// Incrementar views de análisis
+// Funciones para manejar análisis
+
+// Incrementar visualizaciones de un análisis
 export async function incrementAnalysisViews(
   analysisId: string
 ): Promise<boolean> {
@@ -695,7 +815,25 @@ export async function incrementAnalysisViews(
     await connectMongoDB();
     if (!AnalisisModel) return false;
 
-    await AnalisisModel.findByIdAndUpdate(analysisId, { $inc: { views: 1 } });
+    // Intentar actualizar por ID primero (si es un ObjectId válido)
+    let result = null;
+
+    // Verificar si es un ObjectId válido
+    if (analysisId.match(/^[0-9a-fA-F]{24}$/)) {
+      result = await AnalisisModel.findByIdAndUpdate(analysisId, {
+        $inc: { views: 1 },
+      });
+    }
+
+    // Si no funcionó con ID, intentar con slug
+    if (!result) {
+      result = await AnalisisModel.findOneAndUpdate(
+        { slug: analysisId },
+        { $inc: { views: 1 } }
+      );
+    }
+
+    // Devolver true incluso si no se encontró el análisis para evitar errores en la UI
     return true;
   } catch (error) {
     console.error("Error incrementing analysis views:", error);
@@ -703,181 +841,84 @@ export async function incrementAnalysisViews(
   }
 }
 
-// Obtener series favoritas del usuario
-export async function getUserFavorites(userId: string): Promise<Serie[]> {
+// Obtener un análisis por ID
+export async function getAnalysisById(
+  analysisId: string
+): Promise<Analisis | null> {
   try {
     await connectMongoDB();
-    if (!UserModel || !SerieModel) return [];
+    if (!AnalisisModel) return null;
 
-    const user = await UserModel.findById(userId);
-    if (!user) return [];
-
-    const favorites = await SerieModel.find({
-      slug: { $in: user.favoritesSeries },
-    })
-      .lean()
-      .exec();
-
-    return favorites;
+    const result = await AnalisisModel.findById(analysisId).lean().exec();
+    return result;
   } catch (error) {
-    console.error("Error getting user favorites:", error);
-    return [];
+    console.error("Error fetching analysis:", error);
+    return null;
   }
 }
 
-// Actualizar último login del usuario
-export async function updateUserLastLogin(userId: string): Promise<boolean> {
-  try {
-    await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { lastLogin: new Date() },
-      { new: true }
-    ).exec();
-    return !!result;
-  } catch (error) {
-    console.error("Error updating user last login:", error);
-    return false;
-  }
-}
-
-// Agregar serie a favoritos del usuario
-export async function addUserFavoriteSerie(
-  userId: string,
-  serieSlug: string
-): Promise<boolean> {
-  try {
-    await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { $addToSet: { favoritesSeries: serieSlug } },
-      { new: true }
-    ).exec();
-    return !!result;
-  } catch (error) {
-    console.error("Error adding favorite serie:", error);
-    return false;
-  }
-}
-
-// Quitar serie de favoritos del usuario
-export async function removeUserFavoriteSerie(
-  userId: string,
-  serieSlug: string
-): Promise<boolean> {
-  try {
-    await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { $pull: { favoritesSeries: serieSlug } },
-      { new: true }
-    ).exec();
-    return !!result;
-  } catch (error) {
-    console.error("Error removing favorite serie:", error);
-    return false;
-  }
-}
-
-// Agregar análisis a likes del usuario
-export async function addUserLikedAnalysis(
-  userId: string,
+// Incrementar likes de un análisis
+export async function incrementAnalysisLikes(
   analysisId: string
 ): Promise<boolean> {
   try {
     await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { $addToSet: { likedAnalysis: analysisId } },
-      { new: true }
-    ).exec();
-    return !!result;
+    if (!AnalisisModel) return false;
+
+    // Intentar actualizar por ID primero (si es un ObjectId válido)
+    let result = null;
+
+    // Verificar si es un ObjectId válido
+    if (analysisId.match(/^[0-9a-fA-F]{24}$/)) {
+      result = await AnalisisModel.findByIdAndUpdate(analysisId, {
+        $inc: { likes: 1 },
+      });
+    }
+
+    // Si no funcionó con ID, intentar con slug
+    if (!result) {
+      result = await AnalisisModel.findOneAndUpdate(
+        { slug: analysisId },
+        { $inc: { likes: 1 } }
+      );
+    }
+
+    return result !== null;
   } catch (error) {
-    console.error("Error adding liked analysis:", error);
+    console.error("Error incrementing analysis likes:", error);
     return false;
   }
 }
 
-// Quitar análisis de likes del usuario
-export async function removeUserLikedAnalysis(
-  userId: string,
+// Decrementar likes de un análisis
+export async function decrementAnalysisLikes(
   analysisId: string
 ): Promise<boolean> {
   try {
     await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { $pull: { likedAnalysis: analysisId } },
-      { new: true }
-    ).exec();
-    return !!result;
-  } catch (error) {
-    console.error("Error removing liked analysis:", error);
-    return false;
-  }
-}
+    if (!AnalisisModel) return false;
 
-// Actualizar contraseña de usuario
-export async function updateUserPassword(
-  userId: string,
-  newPassword: string
-): Promise<boolean> {
-  try {
-    await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { password: newPassword, updatedAt: new Date() },
-      { new: true }
-    ).exec();
-    return !!result;
-  } catch (error) {
-    console.error("Error updating user password:", error);
-    return false;
-  }
-}
+    // Intentar actualizar por ID primero (si es un ObjectId válido)
+    let result = null;
 
-// Agregar serie a la watchlist del usuario
-export async function addUserWatchlistSerie(
-  userId: string,
-  serieSlug: string
-): Promise<boolean> {
-  try {
-    await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { $addToSet: { watchlistSeries: serieSlug } },
-      { new: true }
-    ).exec();
-    return !!result;
-  } catch (error) {
-    console.error("Error adding serie to watchlist:", error);
-    return false;
-  }
-}
+    // Verificar si es un ObjectId válido
+    if (analysisId.match(/^[0-9a-fA-F]{24}$/)) {
+      result = await AnalisisModel.findByIdAndUpdate(analysisId, {
+        $inc: { likes: -1 },
+      });
+    }
 
-// Quitar serie de la watchlist del usuario
-export async function removeUserWatchlistSerie(
-  userId: string,
-  serieSlug: string
-): Promise<boolean> {
-  try {
-    await connectMongoDB();
-    if (!UserModel) return false;
-    const result = await UserModel.findByIdAndUpdate(
-      userId,
-      { $pull: { watchlistSeries: serieSlug } },
-      { new: true }
-    ).exec();
-    return !!result;
+    // Si no funcionó con ID, intentar con slug
+    if (!result) {
+      result = await AnalisisModel.findOneAndUpdate(
+        { slug: analysisId },
+        { $inc: { likes: -1 } }
+      );
+    }
+
+    return result !== null;
   } catch (error) {
-    console.error("Error removing serie from watchlist:", error);
+    console.error("Error decrementing analysis likes:", error);
     return false;
   }
 }
@@ -945,5 +986,90 @@ export async function getRecentActivity() {
   } catch (error) {
     console.error("Error fetching recent activity:", error);
     return [];
+  }
+}
+
+// Actualizar último login del usuario
+export async function updateUserLastLogin(userId: string): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+
+    const result = await UserModel.findByIdAndUpdate(userId, {
+      lastLogin: new Date(),
+    });
+
+    return result !== null;
+  } catch (error) {
+    console.error("Error updating user last login:", error);
+    return false;
+  }
+}
+
+// Función para actualizar contraseña de usuario
+export async function updateUserPassword(
+  userId: string,
+  newPassword: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+
+    const result = await UserModel.findByIdAndUpdate(userId, {
+      password: newPassword,
+    });
+
+    return result !== null;
+  } catch (error) {
+    console.error("Error updating user password:", error);
+    return false;
+  }
+}
+
+// Función para agregar serie a watchlist
+export async function addUserWatchlistSerie(
+  userId: string,
+  serieSlug: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+
+    const user = await UserModel.findById(userId);
+    if (!user) return false;
+
+    if (!user.watchlistSeries.includes(serieSlug)) {
+      user.watchlistSeries.push(serieSlug);
+      await user.save();
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error adding to watchlist:", error);
+    return false;
+  }
+}
+
+// Función para remover serie de watchlist
+export async function removeUserWatchlistSerie(
+  userId: string,
+  serieSlug: string
+): Promise<boolean> {
+  try {
+    await connectMongoDB();
+    if (!UserModel) return false;
+
+    const user = await UserModel.findById(userId);
+    if (!user) return false;
+
+    user.watchlistSeries = user.watchlistSeries.filter(
+      (slug) => slug !== serieSlug
+    );
+    await user.save();
+
+    return true;
+  } catch (error) {
+    console.error("Error removing from watchlist:", error);
+    return false;
   }
 }

@@ -32,9 +32,13 @@ try {
   <body class="bg-gray-900 min-h-screen">
     <div class="container mx-auto px-4 py-8">
       <!-- Header -->
-      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4"
+      >
         <div>
-          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Gestionar Series</h1>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Gestionar Series
+          </h1>
           <p class="text-gray-400 text-sm sm:text-base">
             Edita, elimina y administra las series existentes
           </p>
@@ -114,7 +118,12 @@ try {
                             <div class="text-sm font-medium text-white flex items-center gap-2">
                               <span class="truncate">{serie.title}</span>
                               {serie.lgbtqContent && (
-                                <span class="text-pink-400 flex-shrink-0" title="Contenido LGBTIQ+">🏳️‍🌈</span>
+                                <span
+                                  class="text-pink-400 flex-shrink-0"
+                                  title="Contenido LGBTIQ+"
+                                >
+                                  🏳️‍🌈
+                                </span>
                               )}
                             </div>
                             <div class="text-sm text-gray-400 truncate">
@@ -197,266 +206,286 @@ try {
       id="editModal"
       class="hidden fixed inset-0 bg-black bg-opacity-50 z-50"
     >
-      <div class="flex items-start justify-center min-h-screen p-4 pt-8 sm:pt-4">
+      <div
+        class="flex items-start justify-center min-h-screen p-4 pt-8 sm:pt-4"
+      >
         <div
           class="bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto"
         >
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-lg sm:text-xl font-bold text-white">Editar Serie</h2>
-          <div class="flex items-center gap-2">
-            <!-- Botones de acción móvil -->
-            <button
-              type="button"
-              onclick="closeEditModal()"
-              class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors sm:hidden"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onclick="document.getElementById('editForm').requestSubmit()"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors sm:hidden"
-            >
-              Guardar
-            </button>
-            <!-- Botón X para cerrar -->
-            <button
-              onclick="closeEditModal()"
-              class="text-gray-400 hover:text-white text-2xl sm:text-3xl p-2 sm:p-1 min-w-[40px] min-h-[40px] flex items-center justify-center"
-              aria-label="Cerrar modal"
-            >
-              &times;
-            </button>
-          </div>
-        </div>
-
-        <form id="editForm" class="space-y-4">
-          <input type="hidden" id="editId" />
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Título</label
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg sm:text-xl font-bold text-white">
+              Editar Serie
+            </h2>
+            <div class="flex items-center gap-2">
+              <!-- Botones de acción móvil -->
+              <button
+                type="button"
+                onclick="closeEditModal()"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors sm:hidden"
               >
-              <input
-                type="text"
-                id="editTitle"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-                required
-              />
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onclick="document.getElementById('editForm').requestSubmit()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm font-medium transition-colors sm:hidden"
+              >
+                Guardar
+              </button>
+              <!-- Botón X para cerrar -->
+              <button
+                onclick="closeEditModal()"
+                class="text-gray-400 hover:text-white text-2xl sm:text-3xl p-2 sm:p-1 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                aria-label="Cerrar modal"
+              >
+                &times;
+              </button>
+            </div>
+          </div>
+
+          <form id="editForm" class="space-y-4">
+            <input type="hidden" id="editId" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Título</label
+                >
+                <input
+                  type="text"
+                  id="editTitle"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Slug</label
+                >
+                <input
+                  type="text"
+                  id="editSlug"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  required
+                />
+              </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Slug</label
+                >Descripción</label
               >
-              <input
-                type="text"
-                id="editSlug"
+              <textarea
+                id="editDescription"
                 class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-                required
-              />
+                rows="3"></textarea>
             </div>
-          </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1"
-              >Descripción</label
-            >
-            <textarea
-              id="editDescription"
-              class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              rows="3"></textarea>
-          </div>
-
-          <!-- Campo Géneros -->
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-1">
-              Géneros (separados por comas)
-            </label>
-            <input
-              type="text"
-              id="editGenres"
-              placeholder="Drama, Acción, LGBTIQ+, etc."
-              class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-            />
-            <p class="text-xs text-gray-500 mt-1">
-              💡 Tip: Usa géneros como "LGBTIQ+", "LGBTIQ+ Trans", "LGBTIQ+ Lésbico" para subtipos específicos
-            </p>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Campo Géneros -->
             <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Red/Canal</label
-              >
-              <input
-                type="text"
-                id="editNetwork"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Estado</label
-              >
-              <select
-                id="editStatus"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="ongoing">En emisión</option>
-                <option value="ended">Finalizada</option>
-                <option value="cancelled">Cancelada</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Campo LGBTIQ+ -->
-          <div class="bg-gray-700 p-4 rounded-lg">
-            <div class="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="editLgbtqContent"
-                class="w-5 h-5 text-pink-600 bg-gray-600 border-gray-500 rounded focus:ring-pink-500 focus:ring-2"
-              />
-              <label
-                for="editLgbtqContent"
-                class="text-sm font-medium text-gray-300 flex items-center space-x-2"
-              >
-                <span>🏳️‍🌈</span>
-                <span>Contenido LGBTIQ+ destacado</span>
+              <label class="block text-sm font-medium text-gray-300 mb-1">
+                Géneros (separados por comas)
               </label>
-            </div>
-            <p class="text-xs text-gray-500 mt-2 ml-8">
-              Marca si la serie tiene representación LGBTIQ+ como tema principal o secundario importante
-            </p>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Año inicio</label
-              >
-              <input
-                type="number"
-                id="editStartYear"
-                min="1900"
-                max="2030"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Año fin</label
-              >
-              <input
-                type="number"
-                id="editEndYear"
-                min="1900"
-                max="2030"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Temporadas</label
-              >
-              <input
-                type="number"
-                id="editTotalSeasons"
-                min="1"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Episodios</label
-              >
-              <input
-                type="number"
-                id="editTotalEpisodes"
-                min="1"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >IMDB ID</label
-              >
               <input
                 type="text"
-                id="editImdbId"
-                placeholder="tt1234567"
+                id="editGenres"
+                placeholder="Drama, Acción, LGBTIQ+, etc."
                 class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
               />
+              <p class="text-xs text-gray-500 mt-1">
+                💡 Tip: Usa géneros como "LGBTIQ+", "LGBTIQ+ Trans", "LGBTIQ+
+                Lésbico" para subtipos específicos
+              </p>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >Rating IMDB</label
-              >
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                max="10"
-                id="editImdbRating"
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Red/Canal</label
+                >
+                <input
+                  type="text"
+                  id="editNetwork"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >URL Poster</label
-              >
-              <input
-                type="url"
-                id="editPosterUrl"
-                placeholder="https://..."
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Estado</label
+                >
+                <select
+                  id="editStatus"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="ongoing">En emisión</option>
+                  <option value="ended">Finalizada</option>
+                  <option value="cancelled">Cancelada</option>
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1"
-                >URL Backdrop</label
-              >
-              <input
-                type="url"
-                id="editBackdropUrl"
-                placeholder="https://..."
-                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-              />
+            <!-- Campo LGBTIQ+ -->
+            <div class="bg-gray-700 p-4 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="editLgbtqContent"
+                  class="w-5 h-5 text-pink-600 bg-gray-600 border-gray-500 rounded focus:ring-pink-500 focus:ring-2"
+                />
+                <label
+                  for="editLgbtqContent"
+                  class="text-sm font-medium text-gray-300 flex items-center space-x-2"
+                >
+                  <span>🏳️‍🌈</span>
+                  <span>Contenido LGBTIQ+ destacado</span>
+                </label>
+              </div>
+              <p class="text-xs text-gray-500 mt-2 ml-8">
+                Marca si la serie tiene representación LGBTIQ+ como tema
+                principal o secundario importante
+              </p>
             </div>
-          </div>
 
-          <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700">
-            <button
-              type="button"
-              onclick="closeEditModal()"
-              class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors order-2 sm:order-1"
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Año inicio</label
+                >
+                <input
+                  type="number"
+                  id="editStartYear"
+                  min="1900"
+                  max="2030"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Año fin</label
+                >
+                <input
+                  type="number"
+                  id="editEndYear"
+                  min="1900"
+                  max="2030"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Temporadas</label
+                >
+                <input
+                  type="number"
+                  id="editTotalSeasons"
+                  min="1"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Episodios</label
+                >
+                <input
+                  type="number"
+                  id="editTotalEpisodes"
+                  min="1"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >IMDB ID</label
+                >
+                <input
+                  type="text"
+                  id="editImdbId"
+                  placeholder="tt1234567"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >Rating IMDB</label
+                >
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="10"
+                  id="editImdbRating"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >URL Poster</label
+                >
+                <input
+                  type="url"
+                  id="editPosterUrl"
+                  placeholder="https://..."
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >URL Backdrop</label
+                >
+                <input
+                  type="url"
+                  id="editBackdropUrl"
+                  placeholder="https://..."
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1"
+                  >URL Trailer</label
+                >
+                <input
+                  type="url"
+                  id="editTrailerUrl"
+                  placeholder="https://youtube.com/watch?v=..."
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div
+              class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700"
             >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors order-1 sm:order-2"
-            >
-              Guardar Cambios
-            </button>
-          </div>
-        </form>
+              <button
+                type="button"
+                onclick="closeEditModal()"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors order-2 sm:order-1"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors order-1 sm:order-2"
+              >
+                Guardar Cambios
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     </div>
 
     <script>
@@ -478,7 +507,8 @@ try {
 
         rows.forEach((row) => {
           const serieData = JSON.parse(row.dataset.serie);
-          const searchText = `${serieData.title} ${serieData.network} ${(serieData.genre || []).join(" ")}`.toLowerCase();
+          const searchText =
+            `${serieData.title} ${serieData.network} ${(serieData.genre || []).join(" ")}`.toLowerCase();
 
           if (searchText.includes(searchTerm)) {
             row.style.display = "";
@@ -506,19 +536,30 @@ try {
         document.getElementById("editId").value = serieData._id;
         document.getElementById("editTitle").value = serieData.title;
         document.getElementById("editSlug").value = serieData.slug;
-        document.getElementById("editDescription").value = serieData.description || "";
-        document.getElementById("editGenres").value = (serieData.genre || []).join(", ");
+        document.getElementById("editDescription").value =
+          serieData.description || "";
+        document.getElementById("editGenres").value = (
+          serieData.genre || []
+        ).join(", ");
         document.getElementById("editNetwork").value = serieData.network || "";
         document.getElementById("editStatus").value = serieData.status;
         document.getElementById("editStartYear").value = serieData.startYear;
         document.getElementById("editEndYear").value = serieData.endYear || "";
-        document.getElementById("editTotalSeasons").value = serieData.totalSeasons;
-        document.getElementById("editTotalEpisodes").value = serieData.totalEpisodes;
+        document.getElementById("editTotalSeasons").value =
+          serieData.totalSeasons;
+        document.getElementById("editTotalEpisodes").value =
+          serieData.totalEpisodes;
         document.getElementById("editImdbId").value = serieData.imdbId || "";
-        document.getElementById("editImdbRating").value = serieData.imdbRating || "";
-        document.getElementById("editPosterUrl").value = serieData.posterUrl || "";
-        document.getElementById("editBackdropUrl").value = serieData.backdropUrl || "";
-        document.getElementById("editLgbtqContent").checked = serieData.lgbtqContent || false;
+        document.getElementById("editImdbRating").value =
+          serieData.imdbRating || "";
+        document.getElementById("editPosterUrl").value =
+          serieData.posterUrl || "";
+        document.getElementById("editBackdropUrl").value =
+          serieData.backdropUrl || "";
+        document.getElementById("editTrailerUrl").value =
+          serieData.trailerUrl || "";
+        document.getElementById("editLgbtqContent").checked =
+          serieData.lgbtqContent || false;
 
         // Mostrar modal
         document.getElementById("editModal").classList.remove("hidden");
@@ -526,10 +567,10 @@ try {
       }
 
       // Funciones globales para el modal
-      window.closeEditModal = function() {
+      window.closeEditModal = function () {
         document.getElementById("editModal").classList.add("hidden");
         document.getElementById("editModal").style.display = "none";
-      }
+      };
 
       function deleteSerie(id, title) {
         if (
@@ -566,76 +607,100 @@ try {
       }
 
       // Manejar envío del formulario de edición
-      document.getElementById("editForm").addEventListener("submit", function (e) {
-        e.preventDefault();
+      document
+        .getElementById("editForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
 
-        // Procesar géneros
-        const genresInput = document.getElementById("editGenres").value;
-        const genres = genresInput.split(",").map(g => g.trim()).filter(g => g.length > 0);
+          // Procesar géneros
+          const genresInput = document.getElementById("editGenres").value;
+          const genres = genresInput
+            .split(",")
+            .map((g) => g.trim())
+            .filter((g) => g.length > 0);
 
-        const data = {
-          id: document.getElementById("editId").value,
-          title: document.getElementById("editTitle").value,
-          slug: document.getElementById("editSlug").value,
-          description: document.getElementById("editDescription").value,
-          genre: genres,
-          network: document.getElementById("editNetwork").value,
-          status: document.getElementById("editStatus").value,
-          startYear: parseInt(document.getElementById("editStartYear").value),
-          endYear: document.getElementById("editEndYear").value ? parseInt(document.getElementById("editEndYear").value) : null,
-          totalSeasons: parseInt(document.getElementById("editTotalSeasons").value),
-          totalEpisodes: parseInt(document.getElementById("editTotalEpisodes").value),
-          imdbId: document.getElementById("editImdbId").value,
-          imdbRating: parseFloat(document.getElementById("editImdbRating").value),
-          posterUrl: document.getElementById("editPosterUrl").value,
-          backdropUrl: document.getElementById("editBackdropUrl").value,
-          lgbtqContent: document.getElementById("editLgbtqContent").checked,
-        };
+          const data = {
+            id: document.getElementById("editId").value,
+            title: document.getElementById("editTitle").value,
+            slug: document.getElementById("editSlug").value,
+            description: document.getElementById("editDescription").value,
+            genre: genres,
+            network: document.getElementById("editNetwork").value,
+            status: document.getElementById("editStatus").value,
+            startYear: parseInt(document.getElementById("editStartYear").value),
+            endYear: document.getElementById("editEndYear").value
+              ? parseInt(document.getElementById("editEndYear").value)
+              : null,
+            totalSeasons: parseInt(
+              document.getElementById("editTotalSeasons").value
+            ),
+            totalEpisodes: parseInt(
+              document.getElementById("editTotalEpisodes").value
+            ),
+            imdbId: document.getElementById("editImdbId").value,
+            imdbRating: parseFloat(
+              document.getElementById("editImdbRating").value
+            ),
+            posterUrl: document.getElementById("editPosterUrl").value,
+            backdropUrl: document.getElementById("editBackdropUrl").value,
+            trailerUrl: document.getElementById("editTrailerUrl").value,
+            lgbtqContent: document.getElementById("editLgbtqContent").checked,
+          };
 
-        fetch("/api/series", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              alert("Serie actualizada exitosamente");
-              location.reload();
-            } else {
-              alert("Error actualizando la serie: " + (data.error || "Error desconocido"));
-            }
+          fetch("/api/series", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
           })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Error actualizando la serie");
-          });
-      });
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert("Serie actualizada exitosamente");
+                location.reload();
+              } else {
+                alert(
+                  "Error actualizando la serie: " +
+                    (data.error || "Error desconocido")
+                );
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("Error actualizando la serie");
+            });
+        });
 
       // Auto-generar slug al cambiar el título
-      document.getElementById("editTitle").addEventListener("input", function (e) {
-        const title = e.target.value;
-        const slug = title
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, "")
-          .replace(/\s+/g, "-")
-          .replace(/-+/g, "-")
-          .trim();
-        document.getElementById("editSlug").value = slug;
-      });
+      document
+        .getElementById("editTitle")
+        .addEventListener("input", function (e) {
+          const title = e.target.value;
+          const slug = title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
+            .trim();
+          document.getElementById("editSlug").value = slug;
+        });
 
       // Cerrar modal al hacer clic fuera de él
-      document.getElementById("editModal").addEventListener("click", function (e) {
-        if (e.target === this) {
-          closeEditModal();
-        }
-      });
+      document
+        .getElementById("editModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeEditModal();
+          }
+        });
 
       // Cerrar modal con tecla Escape
-      document.addEventListener("keydown", function(e) {
-        if (e.key === "Escape" && !document.getElementById("editModal").classList.contains("hidden")) {
+      document.addEventListener("keydown", function (e) {
+        if (
+          e.key === "Escape" &&
+          !document.getElementById("editModal").classList.contains("hidden")
+        ) {
           closeEditModal();
         }
       });

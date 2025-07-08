@@ -15,6 +15,28 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
   const [filteredSeries, setFilteredSeries] = useState<Serie[]>(initialSeries)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentFilter, setCurrentFilter] = useState<Serie[]>(initialSeries)
+  
+  // Estado local para favoritos y watchlist
+  const [localFavorites, setLocalFavorites] = useState<string[]>(userFavorites)
+  const [localWatchlist, setLocalWatchlist] = useState<string[]>(userWatchlist)
+
+  // Función para manejar cambios en favoritos
+  const handleFavoriteChange = (slug: string, isFavorite: boolean) => {
+    setLocalFavorites(prev => 
+      isFavorite 
+        ? [...prev, slug]
+        : prev.filter(s => s !== slug)
+    )
+  }
+
+  // Función para manejar cambios en watchlist
+  const handleWatchlistChange = (slug: string, isInWatchlist: boolean) => {
+    setLocalWatchlist(prev => 
+      isInWatchlist 
+        ? [...prev, slug]
+        : prev.filter(s => s !== slug)
+    )
+  }
 
   // Aplicar búsqueda sobre las series filtradas
   useEffect(() => {
@@ -90,11 +112,14 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
             status={serie.status}
             imdbRating={serie.imdbRating}
             posterUrl={serie.posterUrl}
+            trailerUrl={serie.trailerUrl}
             platforms={serie.platforms}
             slug={serie.slug}
-            isFavorite={userFavorites.includes(serie.slug)}
-            isInWatchlist={userWatchlist.includes(serie.slug)}
+            isFavorite={localFavorites.includes(serie.slug)}
+            isInWatchlist={localWatchlist.includes(serie.slug)}
             isAuthenticated={isAuthenticated}
+            onFavoriteChange={handleFavoriteChange}
+            onWatchlistChange={handleWatchlistChange}
           />
         ))}
       </div>

@@ -120,6 +120,20 @@ if (currentUser) {
               </div>
             </div>
 
+            {/* Botón de trailer si existe */}
+            {serie.trailerUrl && (
+              <div class="mb-4">
+                <button
+                  id="trailerBtn"
+                  class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium text-sm transition-all duration-200 hover:-translate-y-0.5"
+                  data-trailer={serie.trailerUrl}
+                >
+                  <span class="text-base">🎬</span>
+                  <span>Ver Trailer</span>
+                </button>
+              </div>
+            )}
+
             {/* Botón de favoritos solo para usuarios autenticados */}
             {
               currentUser && (
@@ -182,6 +196,8 @@ if (currentUser) {
                   likes={item.likes}
                   publishedAt={item.publishedAt}
                   slug={item.slug}
+                  isAuthenticated={!!currentUser}
+                  hasUserLiked={false}
                 />
               ))}
             </div>
@@ -276,6 +292,90 @@ if (currentUser) {
             this.disabled = false;
           }
         });
+      }
+
+      // Funcionalidad del trailer
+      const trailerBtn = document.getElementById("trailerBtn");
+      if (trailerBtn) {
+        trailerBtn.addEventListener("click", function() {
+          const trailerUrl = this.dataset.trailer;
+          if (trailerUrl) {
+            openTrailerModal(trailerUrl);
+          }
+        });
+      }
+
+      // Funciones para el modal del trailer
+      function openTrailerModal(url) {
+        let videoId = '';
+        
+        // Extraer ID del video de YouTube
+        if (url.includes('youtube.com/watch?v=')) {
+          videoId = url.split('v=')[1].split('&')[0];
+        } else if (url.includes('youtu.be/')) {
+          videoId = url.split('youtu.be/')[1].split('?')[0];
+        }
+        
+        if (videoId) {
+          const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0`;
+          
+          // Crear modal
+          const modal = document.createElement('div');
+          modal.id = 'trailerModal';
+          modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4';
+          modal.innerHTML = `
+            <div class="relative bg-white rounded-lg overflow-hidden max-w-4xl w-full max-h-[90vh]">
+              <div class="flex justify-between items-center p-4 bg-gray-900 text-white">
+                <h3 class="text-lg font-semibold">🎬 Trailer</h3>
+                <button id="closeTrailerModal" class="text-gray-300 hover:text-white">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="aspect-video">
+                <iframe
+                  src="${embedUrl}"
+                  class="w-full h-full"
+                  frameborder="0"
+                  allowfullscreen
+                  allow="autoplay; encrypted-media"
+                ></iframe>
+              </div>
+            </div>
+          `;
+          
+          document.body.appendChild(modal);
+          
+          // Prevenir scroll del body
+          document.body.style.overflow = 'hidden';
+          
+          // Cerrar modal
+          const closeBtn = modal.querySelector('#closeTrailerModal');
+          function closeModal() {
+            modal.remove();
+            document.body.style.overflow = '';
+          }
+          
+          closeBtn.addEventListener('click', closeModal);
+          
+          // Cerrar al hacer clic fuera del modal
+          modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+              closeModal();
+            }
+          });
+          
+          // Cerrar con Escape
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('trailerModal')) {
+              closeModal();
+            }
+          });
+        } else {
+          // Si no es un video de YouTube, abrir en nueva ventana
+          window.open(url, '_blank');
+        }
       }
     </script>
   </body>

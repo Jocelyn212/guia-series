@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface FullAnalysisCardProps {
   title: string
@@ -15,6 +15,9 @@ interface FullAnalysisCardProps {
   likes: number
   publishedAt?: Date
   slug?: string
+  analysisId?: string
+  isAuthenticated?: boolean
+  hasUserLiked?: boolean
 }
 
 export default function FullAnalysisCard({
@@ -27,35 +30,84 @@ export default function FullAnalysisCard({
   views: initialViews,
   likes: initialLikes,
   publishedAt,
-  slug
+  slug,
+  isAuthenticated = false,
+  hasUserLiked = false
 }: FullAnalysisCardProps): ReactElement {
   const [views, setViews] = useState(initialViews)
   const [likes, setLikes] = useState(initialLikes)
-  const [hasLiked, setHasLiked] = useState(false)
+  const [hasLiked, setHasLiked] = useState(hasUserLiked)
   const [hasViewed, setHasViewed] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Colores elegantes y profesionales en lugar de azul/rojo fuertes
   const bgColor = universe === 'blue' ? 'bg-slate-600' : 'bg-purple-600'
   const badgeColor = universe === 'blue' ? 'bg-slate-100 text-slate-700' : 'bg-purple-100 text-purple-700'
   
-  // Simular incremento de vista al cargar el componente
-  useState(() => {
-    if (!hasViewed) {
+  // Incrementar vista al cargar el componente (solo una vez)
+  useEffect(() => {
+    if (!hasViewed && slug) {
       setViews(prev => prev + 1)
       setHasViewed(true)
+      
+      // Enviar vista al servidor (opcional, sin bloquear UI)
+      fetch('/api/views', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysisSlug: slug }),
+        credentials: 'same-origin'
+      }).catch(() => {
+        // Silenciosamente ignorar errores de vista
+      })
     }
-  })
+  }, [slug, hasViewed])
 
   // Manejar like/unlike
-  const handleLike = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation()
     
-    if (hasLiked) {
-      setLikes(prev => prev - 1)
-      setHasLiked(false)
-    } else {
-      setLikes(prev => prev + 1)
-      setHasLiked(true)
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para dar me gusta')
+      return
+    }
+
+    if (!slug || isLoading) return
+    
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/analysis-likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          analysisSlug: slug,
+          action: hasLiked ? 'remove' : 'add'
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          if (hasLiked) {
+            setLikes(prev => prev - 1)
+            setHasLiked(false)
+          } else {
+            setLikes(prev => prev + 1)
+            setHasLiked(true)
+          }
+        } else {
+          alert('Error al actualizar me gusta: ' + result.error)
+        }
+      } else {
+        const error = await response.json()
+        alert('Error: ' + error.error)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error de conexión')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -147,11 +199,13 @@ export default function FullAnalysisCard({
           
           <button 
             onClick={handleLike}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-200 hover:scale-105 ${
+            disabled={!isAuthenticated || isLoading}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
               hasLiked 
                 ? 'bg-red-100 text-red-600 hover:bg-red-200' 
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
+            title={!isAuthenticated ? 'Inicia sesión para dar me gusta' : ''}
           >
             <svg 
               className={`w-5 h-5 ${hasLiked ? 'fill-current' : 'fill-none'}`} 

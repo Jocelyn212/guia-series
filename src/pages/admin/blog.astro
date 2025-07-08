@@ -1,0 +1,454 @@
+---
+import { getAuthUser } from "../../lib/auth";
+import { getAllBlogPostsAdmin } from "../../lib/blog";
+import "../../styles/global.css";
+
+// Verificar autenticación
+const user = getAuthUser(Astro);
+if (!user) {
+  return Astro.redirect("/admin");
+}
+
+// Obtener todos los posts (incluidos los no publicados)
+const posts = await getAllBlogPostsAdmin(50);
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Blog - Admin | SeriesGuide</title>
+  </head>
+  <body class="bg-gray-900 text-white">
+    <div class="min-h-screen">
+      <!-- Header -->
+      <header class="bg-gray-800 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-4">
+              <a href="/admin" class="text-blue-400 hover:text-blue-300">
+                ← Volver al Admin
+              </a>
+              <h1 class="text-xl font-bold">📰 Gestión de Blog</h1>
+            </div>
+            <button
+              id="newPostBtn"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              ✏️ Nuevo Post
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Posts Table -->
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-700">
+            <h2 class="text-lg font-semibold">Posts del Blog</h2>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-700">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Título
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Categoría
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Fecha
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="postsTableBody" class="bg-gray-800 divide-y divide-gray-700">
+                {posts.length > 0 ? (
+                  posts.map((post) => (
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-white">{post.title}</div>
+                        <div class="text-sm text-gray-400">{post.excerpt}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {post.category}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          post.published 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {post.published ? 'Publicado' : 'Borrador'}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                        {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('es-ES') : 'Sin fecha'}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button
+                          class="text-blue-400 hover:text-blue-300 editPostBtn"
+                          data-post-id={post._id}
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          class="text-red-400 hover:text-red-300 deletePostBtn"
+                          data-post-id={post._id}
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-400">
+                      No hay posts creados. ¡Crea tu primer post!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal para Nuevo/Editar Post -->
+    <div id="postModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+      <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-gray-800">
+        <div class="mt-3">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-white" id="modalTitle">Nuevo Post</h3>
+            <button
+              id="closeModal"
+              class="text-gray-400 hover:text-white"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <form id="postForm">
+            <input type="hidden" id="postId" />
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Título</label>
+                <input
+                  type="text"
+                  id="postTitle"
+                  required
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Slug</label>
+                <input
+                  type="text"
+                  id="postSlug"
+                  required
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-300 mb-1">Extracto</label>
+              <textarea
+                id="postExcerpt"
+                rows="3"
+                required
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Categoría</label>
+                <select
+                  id="postCategory"
+                  required
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="news">📰 Noticias</option>
+                  <option value="analysis">🔍 Análisis</option>
+                  <option value="interview">🎤 Entrevistas</option>
+                  <option value="editorial">✍️ Editorial</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Imagen Destacada (URL)</label>
+                <input
+                  type="url"
+                  id="postImage"
+                  class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-300 mb-1">Tags (separados por comas)</label>
+              <input
+                type="text"
+                id="postTags"
+                placeholder="serie, netflix, análisis"
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-300 mb-1">Contenido</label>
+              <textarea
+                id="postContent"
+                rows="15"
+                required
+                placeholder="Escribe el contenido del post aquí. Puedes usar **Título** para crear títulos."
+                class="w-full bg-gray-700 text-white rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+              ></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label class="flex items-center">
+                <input
+                  type="checkbox"
+                  id="postPublished"
+                  class="mr-2"
+                />
+                <span class="text-sm text-gray-300">Publicar inmediatamente</span>
+              </label>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+              <button
+                type="button"
+                id="cancelBtn"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                Guardar Post
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Variables globales
+      let currentEditingPost: string | null = null;
+
+      // Elementos del DOM
+      const postModal = document.getElementById('postModal');
+      const postForm = document.getElementById('postForm') as HTMLFormElement;
+      const modalTitle = document.getElementById('modalTitle');
+      const newPostBtn = document.getElementById('newPostBtn');
+      const closeModal = document.getElementById('closeModal');
+      const cancelBtn = document.getElementById('cancelBtn');
+
+      // Funciones para el modal
+      function openModal(title = 'Nuevo Post') {
+        if (modalTitle) modalTitle.textContent = title;
+        if (postModal) postModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModalFn() {
+        if (postModal) postModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        if (postForm) postForm.reset();
+        currentEditingPost = null;
+      }
+
+      // Event listeners
+      if (newPostBtn) {
+        newPostBtn.addEventListener('click', () => {
+          openModal('Nuevo Post');
+        });
+      }
+
+      if (closeModal) closeModal.addEventListener('click', closeModalFn);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModalFn);
+
+      // Cerrar modal al hacer clic fuera
+      if (postModal) {
+        postModal.addEventListener('click', (e) => {
+          if (e.target === postModal) {
+            closeModalFn();
+          }
+        });
+      }
+
+      // Auto-generar slug desde el título
+      const postTitleEl = document.getElementById('postTitle') as HTMLInputElement;
+      postTitleEl.addEventListener('input', function() {
+        const title = this.value;
+        const slug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .trim();
+        const postSlugEl = document.getElementById('postSlug') as HTMLInputElement;
+        postSlugEl.value = slug;
+      });
+
+      // Enviar formulario
+      if (postForm) {
+        postForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const titleEl = document.getElementById('postTitle') as HTMLInputElement;
+          const slugEl = document.getElementById('postSlug') as HTMLInputElement;
+          const excerptEl = document.getElementById('postExcerpt') as HTMLTextAreaElement;
+          const contentEl = document.getElementById('postContent') as HTMLTextAreaElement;
+          const categoryEl = document.getElementById('postCategory') as HTMLSelectElement;
+          const imageEl = document.getElementById('postImage') as HTMLInputElement;
+          const tagsEl = document.getElementById('postTags') as HTMLInputElement;
+          const publishedEl = document.getElementById('postPublished') as HTMLInputElement;
+
+          const formData: any = {
+            title: titleEl.value,
+            slug: slugEl.value,
+            excerpt: excerptEl.value,
+            content: contentEl.value,
+            category: categoryEl.value,
+            featuredImage: imageEl.value,
+            tags: tagsEl.value.split(',').map(tag => tag.trim()).filter(tag => tag),
+            published: publishedEl.checked,
+            author: { name: 'Administrador' }
+          };
+
+          try {
+            const method = currentEditingPost ? 'PUT' : 'POST';
+            const url = '/api/blog';
+            
+            if (currentEditingPost) {
+              formData.id = currentEditingPost;
+            }
+
+            const response = await fetch(url, {
+              method,
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+              alert(currentEditingPost ? 'Post actualizado exitosamente' : 'Post creado exitosamente');
+              closeModalFn();
+              location.reload();
+            } else {
+              const error = await response.json();
+              alert('Error: ' + error.error);
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión');
+          }
+        });
+      }
+
+      // Funciones para editar y eliminar posts
+      document.addEventListener('click', async (e) => {
+        const target = e.target as HTMLElement;
+        if (!target) return;
+
+        if (target.classList && target.classList.contains('editPostBtn')) {
+          const postId = target.getAttribute('data-post-id');
+          if (postId) {
+            await loadPostForEditing(postId);
+          }
+        }
+        
+        if (target.classList && target.classList.contains('deletePostBtn')) {
+          const postId = target.getAttribute('data-post-id');
+          if (postId && confirm('¿Estás seguro de que quieres eliminar este post?')) {
+            try {
+              const response = await fetch('/api/blog', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ id: postId })
+              });
+
+              if (response.ok) {
+                alert('Post eliminado exitosamente');
+                location.reload();
+              } else {
+                const error = await response.json();
+                alert('Error: ' + error.error);
+              }
+            } catch (error) {
+              console.error('Error:', error);
+              alert('Error de conexión');
+            }
+          }
+        }
+      });
+
+      // Función para cargar post para edición
+      async function loadPostForEditing(postId: string) {
+        try {
+          // Obtener el post por API
+          const response = await fetch(`/api/blog?id=${postId}`, {
+            credentials: 'same-origin'
+          });
+          
+          if (response.ok) {
+            const post = await response.json();
+            
+            // Llenar el formulario con los datos del post
+            const postIdEl = document.getElementById('postId') as HTMLInputElement;
+            const titleEl = document.getElementById('postTitle') as HTMLInputElement;
+            const slugEl = document.getElementById('postSlug') as HTMLInputElement;
+            const excerptEl = document.getElementById('postExcerpt') as HTMLTextAreaElement;
+            const contentEl = document.getElementById('postContent') as HTMLTextAreaElement;
+            const categoryEl = document.getElementById('postCategory') as HTMLSelectElement;
+            const imageEl = document.getElementById('postImage') as HTMLInputElement;
+            const tagsEl = document.getElementById('postTags') as HTMLInputElement;
+            const publishedEl = document.getElementById('postPublished') as HTMLInputElement;
+            
+            postIdEl.value = post._id;
+            titleEl.value = post.title;
+            slugEl.value = post.slug;
+            excerptEl.value = post.excerpt;
+            contentEl.value = post.content;
+            categoryEl.value = post.category;
+            imageEl.value = post.featuredImage || '';
+            tagsEl.value = post.tags.join(', ');
+            publishedEl.checked = post.published;
+            
+            currentEditingPost = postId;
+            openModal('Editar Post');
+          } else {
+            alert('Error obteniendo el post');
+          }
+        } catch (error) {
+          console.error('Error loading post:', error);
+          alert('Error cargando el post');
+        }
+      }
+    </script>
+  </body>
+</html>

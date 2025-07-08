@@ -1,0 +1,197 @@
+---
+import ResponsiveNav from "../components/ResponsiveNav.astro";
+import { getAllBlogPosts, getBlogPostsCount } from "../lib/blog";
+import { getPublicAuthUser } from "../lib/publicAuth";
+import "../styles/global.css";
+
+// Obtener posts de blog
+const posts = await getAllBlogPosts(12);
+const totalPosts = await getBlogPostsCount();
+
+// Obtener usuario autenticado
+const currentUser = getPublicAuthUser(Astro.request);
+
+// Función para formatear fecha
+function formatDate(date: Date): string {
+  return new Date(date).toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+// Función para obtener color de categoría
+function getCategoryColor(category: string): string {
+  switch (category) {
+    case 'news':
+      return 'bg-blue-100 text-blue-800';
+    case 'analysis':
+      return 'bg-purple-100 text-purple-800';
+    case 'interview':
+      return 'bg-green-100 text-green-800';
+    case 'editorial':
+      return 'bg-orange-100 text-orange-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+}
+
+// Función para obtener icono de categoría
+function getCategoryIcon(category: string): string {
+  switch (category) {
+    case 'news':
+      return '📰';
+    case 'analysis':
+      return '🔍';
+    case 'interview':
+      return '🎤';
+    case 'editorial':
+      return '✍️';
+    default:
+      return '📝';
+  }
+}
+
+// Función para obtener nombre de categoría
+function getCategoryName(category: string): string {
+  switch (category) {
+    case 'news':
+      return 'Noticias';
+    case 'analysis':
+      return 'Análisis';
+    case 'interview':
+      return 'Entrevistas';
+    case 'editorial':
+      return 'Editorial';
+    default:
+      return 'Artículo';
+  }
+}
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog - Noticias y Análisis | SeriesGuide</title>
+    <meta
+      name="description"
+      content="Últimas noticias, análisis y entrevistas sobre series de televisión. Mantente al día con todo lo que está pasando en el mundo de las series."
+    />
+  </head>
+  <body class="bg-gray-50">
+    <!-- Navigation -->
+    <ResponsiveNav />
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+          📰 Blog SeriesGuide
+        </h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+          Últimas noticias, análisis profundos y entrevistas exclusivas sobre el mundo de las series
+        </p>
+      </div>
+
+      <!-- Posts Grid -->
+      {posts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {posts.map((post) => (
+            <article class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              {/* Featured Image */}
+              <div class="h-48 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                {post.featuredImage ? (
+                  <img
+                    src={post.featuredImage}
+                    alt={post.title}
+                    class="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div class="text-6xl text-gray-400">
+                    {getCategoryIcon(post.category)}
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div class="p-6">
+                {/* Category */}
+                <div class="flex items-center gap-2 mb-3">
+                  <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(post.category)}`}>
+                    {getCategoryIcon(post.category)} {getCategoryName(post.category)}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h2 class="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                  <a href={`/blog/${post.slug}`} class="hover:text-blue-600 transition-colors">
+                    {post.title}
+                  </a>
+                </h2>
+
+                {/* Excerpt */}
+                <p class="text-gray-600 mb-4 line-clamp-3">
+                  {post.excerpt}
+                </p>
+
+                {/* Meta */}
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                  <div class="flex items-center gap-2">
+                    {post.author.avatar ? (
+                      <img
+                        src={post.author.avatar}
+                        alt={post.author.name}
+                        class="w-6 h-6 rounded-full"
+                      />
+                    ) : (
+                      <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center">
+                        <span class="text-xs">👤</span>
+                      </div>
+                    )}
+                    <span>{post.author.name}</span>
+                  </div>
+                  <span>
+                    {post.publishedAt && formatDate(new Date(post.publishedAt))}
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div class="text-center py-12">
+          <div class="text-6xl text-gray-400 mb-4">📰</div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">No hay posts disponibles</h2>
+          <p class="text-gray-600">Pronto habrá contenido nuevo aquí.</p>
+        </div>
+      )}
+
+      {/* Pagination placeholder */}
+      {posts.length > 0 && (
+        <div class="mt-12 flex justify-center">
+          <p class="text-gray-600 text-sm">
+            Mostrando {posts.length} de {totalPosts} posts
+          </p>
+        </div>
+      )}
+    </main>
+  </body>
+</html>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

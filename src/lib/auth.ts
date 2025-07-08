@@ -92,6 +92,6 @@ export function getServerAuthUser(request: Request): AuthUser | null {
   }
 
   const user = verifyToken(token);
-  
+
   return user;
 }
