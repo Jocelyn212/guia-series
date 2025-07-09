@@ -11,6 +11,14 @@ interface SeriesGridProps {
   isAuthenticated?: boolean
 }
 
+interface SerieRatings {
+  userRating: number
+  averageRating: number
+  totalRatings: number
+}
+
+type RatingsMap = Record<string, SerieRatings>
+
 export default function SeriesGrid({ initialSeries, userFavorites = [], userWatchlist = [], isAuthenticated = false }: SeriesGridProps) {
   const [filteredSeries, setFilteredSeries] = useState<Serie[]>(initialSeries)
   const [searchQuery, setSearchQuery] = useState('')
@@ -19,6 +27,10 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
   // Estado local para favoritos y watchlist
   const [localFavorites, setLocalFavorites] = useState<string[]>(userFavorites)
   const [localWatchlist, setLocalWatchlist] = useState<string[]>(userWatchlist)
+  
+  // Estado para valoraciones
+  const [ratingsMap, setRatingsMap] = useState<RatingsMap>({})
+  const [ratingsLoaded, setRatingsLoaded] = useState(false)
 
   // Función para manejar cambios en favoritos
   const handleFavoriteChange = (slug: string, isFavorite: boolean) => {
@@ -36,6 +48,18 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
         ? [...prev, slug]
         : prev.filter(s => s !== slug)
     )
+  }
+
+  // Función para manejar cambios en valoraciones
+  const handleRatingChange = (slug: string, userRating: number, averageRating: number, totalRatings: number) => {
+    setRatingsMap(prev => ({
+      ...prev,
+      [slug]: {
+        userRating,
+        averageRating,
+        totalRatings
+      }
+    }))
   }
 
   // Aplicar búsqueda sobre las series filtradas
@@ -75,6 +99,50 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
     setSearchQuery(query)
   }
 
+  // Función para cargar valoraciones de todas las series
+  const loadAllRatings = async () => {
+    if (ratingsLoaded) return
+    
+    try {
+      // Crear lista de slugs de todas las series
+      const seriesSlugs = initialSeries.map(serie => serie.slug)
+      
+      // Hacer una sola llamada a la API batch
+      const response = await fetch(`/api/ratings-batch?serieSlug=${seriesSlugs.join(',')}`)
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.ratings) {
+          setRatingsMap(result.ratings)
+        } else {
+          console.error('Error in batch ratings response:', result)
+        }
+      } else {
+        console.error('Error loading batch ratings:', response.status)
+      }
+      
+      setRatingsLoaded(true)
+    } catch (error) {
+      console.error('Error loading ratings:', error)
+      setRatingsLoaded(true)
+    }
+  }
+
+  // Cargar valoraciones cuando el componente se monta
+  useEffect(() => {
+    if (!ratingsLoaded) {
+      loadAllRatings()
+    }
+  }, [ratingsLoaded])
+
+  // Actualizar valoraciones del usuario cuando cambie el estado de autenticación
+  useEffect(() => {
+    if (isAuthenticated && ratingsLoaded) {
+      // Recargar valoraciones para incluir las del usuario
+      setRatingsLoaded(false) // Resetear para permitir recarga
+    }
+  }, [isAuthenticated])
+
   return (
     <>
       <SearchBar onSearch={handleSearch} placeholder="Buscar por título, género, cadena..." />
@@ -100,28 +168,36 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
       
       {/* Series Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredSeries.map((serie) => (
-          <SerieCard
-            key={serie.slug}
-            title={serie.title}
-            description={serie.description}
-            genre={serie.genre}
-            network={serie.network}
-            startYear={serie.startYear}
-            endYear={serie.endYear}
-            status={serie.status}
-            imdbRating={serie.imdbRating}
-            posterUrl={serie.posterUrl}
-            trailerUrl={serie.trailerUrl}
-            platforms={serie.platforms}
-            slug={serie.slug}
-            isFavorite={localFavorites.includes(serie.slug)}
-            isInWatchlist={localWatchlist.includes(serie.slug)}
-            isAuthenticated={isAuthenticated}
-            onFavoriteChange={handleFavoriteChange}
-            onWatchlistChange={handleWatchlistChange}
-          />
-        ))}
+        {filteredSeries.map((serie) => {
+          const ratings = ratingsMap[serie.slug] || { userRating: 0, averageRating: 0, totalRatings: 0 }
+          
+          return (
+            <SerieCard
+              key={serie.slug}
+              title={serie.title}
+              description={serie.description}
+              genre={serie.genre}
+              network={serie.network}
+              startYear={serie.startYear}
+              endYear={serie.endYear}
+              status={serie.status}
+              imdbRating={serie.imdbRating}
+              posterUrl={serie.posterUrl}
+              trailerUrl={serie.trailerUrl}
+              platforms={serie.platforms}
+              slug={serie.slug}
+              isFavorite={localFavorites.includes(serie.slug)}
+              isInWatchlist={localWatchlist.includes(serie.slug)}
+              isAuthenticated={isAuthenticated}
+              onFavoriteChange={handleFavoriteChange}
+              onWatchlistChange={handleWatchlistChange}
+              onRatingChange={handleRatingChange}
+              userRating={ratings.userRating}
+              averageRating={ratings.averageRating}
+              totalRatings={ratings.totalRatings}
+            />
+          )
+        })}
       </div>
 
       {/* Empty State */}

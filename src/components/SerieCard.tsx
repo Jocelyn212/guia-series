@@ -23,6 +23,11 @@ interface SerieCardProps {
   isAuthenticated?: boolean
   onFavoriteChange?: (slug: string, isFavorite: boolean) => void
   onWatchlistChange?: (slug: string, isInWatchlist: boolean) => void
+  // Nuevas props para valoraciones
+  userRating?: number
+  averageRating?: number
+  totalRatings?: number
+  onRatingChange?: (slug: string, userRating: number, averageRating: number, totalRatings: number) => void
 }
 
 export default function SerieCard({
@@ -42,11 +47,22 @@ export default function SerieCard({
   isInWatchlist: initialIsInWatchlist = false,
   isAuthenticated = false,
   onFavoriteChange,
-  onWatchlistChange
+  onWatchlistChange,
+  userRating: initialUserRating = 0,
+  averageRating: initialAverageRating = 0,
+  totalRatings: initialTotalRatings = 0,
+  onRatingChange
 }: SerieCardProps): ReactElement {
   const [isLiked, setIsLiked] = useState(initialIsFavorite)
   const [isBookmarked, setIsBookmarked] = useState(initialIsInWatchlist)
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Estados para valoraciones
+  const [userRating, setUserRating] = useState(initialUserRating)
+  const [averageRating, setAverageRating] = useState(initialAverageRating)
+  const [totalRatings, setTotalRatings] = useState(initialTotalRatings)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [isRatingLoading, setIsRatingLoading] = useState(false)
 
   // Sincronizar estados cuando las props cambien
   useEffect(() => {
@@ -56,6 +72,19 @@ export default function SerieCard({
   useEffect(() => {
     setIsBookmarked(initialIsInWatchlist)
   }, [initialIsInWatchlist])
+
+  // Sincronizar valoraciones
+  useEffect(() => {
+    setUserRating(initialUserRating)
+  }, [initialUserRating])
+
+  useEffect(() => {
+    setAverageRating(initialAverageRating)
+  }, [initialAverageRating])
+
+  useEffect(() => {
+    setTotalRatings(initialTotalRatings)
+  }, [initialTotalRatings])
 
   const statusColor = {
     ongoing: 'bg-green-500',
@@ -245,6 +274,86 @@ export default function SerieCard({
     }
   }
 
+  // Función para manejar valoraciones
+  const handleRating = async (rating: number) => {
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para valorar series')
+      return
+    }
+    
+    if (isRatingLoading) return
+    
+    setIsRatingLoading(true)
+    
+    try {
+      const response = await fetch('/api/ratings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          serieSlug: slug,
+          rating: rating
+        })
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setUserRating(rating)
+          setAverageRating(result.data.averageRating)
+          setTotalRatings(result.data.totalRatings)
+          // Notificar al componente padre del cambio
+          onRatingChange?.(slug, rating, result.data.averageRating, result.data.totalRatings)
+        } else {
+          alert('Error al valorar la serie: ' + result.error)
+        }
+      } else {
+        const error = await response.json()
+        alert('Error: ' + error.error)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      alert('Error de conexión')
+    } finally {
+      setIsRatingLoading(false)
+    }
+  }
+
+  // Función para renderizar estrellas
+  const renderStars = (rating: number, interactive = false, size = 'w-4 h-4') => {
+    const stars = []
+    for (let i = 1; i <= 5; i++) {
+      const isFilled = i <= rating
+      const isHovered = interactive && i <= hoverRating
+      
+      stars.push(
+        <button
+          key={i}
+          onClick={interactive ? () => handleRating(i) : undefined}
+          onMouseEnter={interactive ? () => setHoverRating(i) : undefined}
+          onMouseLeave={interactive ? () => setHoverRating(0) : undefined}
+          disabled={!interactive || isRatingLoading}
+          className={`${size} ${
+            interactive 
+              ? 'hover:scale-110 transition-transform cursor-pointer disabled:cursor-not-allowed' 
+              : 'cursor-default'
+          } ${
+            isFilled || isHovered 
+              ? 'text-yellow-400 fill-current' 
+              : 'text-gray-300'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+        </button>
+      )
+    }
+    return stars
+  }
+
   return (
     <article className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden group">
       {/* Poster Image */}
@@ -268,8 +377,19 @@ export default function SerieCard({
         
         {/* IMDB Rating */}
         <div className="absolute top-3 left-3 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold shadow-lg">
-          ⭐ {imdbRating}
+          IMDb ⭐ {imdbRating}
         </div>
+
+        {/* User Rating */}
+        {averageRating > 0 && (
+          <div className="absolute top-16 left-3 bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+            <div className="flex items-center gap-1">
+              <span className="text-yellow-300">✦</span>
+              <span>{averageRating.toFixed(1)}</span>
+              <span className="text-xs opacity-80">({totalRatings})</span>
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="absolute bottom-3 right-3 flex gap-2 opacity-100 transition-opacity duration-300 sm:opacity-0 sm:group-hover:opacity-100">
@@ -334,6 +454,35 @@ export default function SerieCard({
         <p className="text-gray-600 text-sm mb-4 line-clamp-3">
           {description}
         </p>
+
+        {/* User Rating Section */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Valoración de usuarios:</span>
+            {averageRating > 0 && (
+              <span className="text-sm text-gray-600">
+                {averageRating.toFixed(1)}/5 ({totalRatings} valoraciones)
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {renderStars(hoverRating || userRating, isAuthenticated, 'w-6 h-6')}
+            </div>
+            {isAuthenticated && (
+              <span className="text-xs text-gray-500">
+                {userRating > 0 ? `Tu valoración: ${userRating}/5` : 'Haz clic para valorar'}
+              </span>
+            )}
+          </div>
+          
+          {!isAuthenticated && (
+            <p className="text-xs text-gray-500 mt-1">
+              Inicia sesión para valorar esta serie
+            </p>
+          )}
+        </div>
 
         {/* Platforms */}
         <div className="mb-4">

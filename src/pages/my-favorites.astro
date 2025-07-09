@@ -3,6 +3,7 @@ import { getPublicAuthUser } from "../lib/publicAuth";
 import { getUserById, getSeries } from "../lib/mongo";
 import "../styles/global.css";
 import ResponsiveNav from "../components/ResponsiveNav.astro";
+import SeriesGrid from "../components/SeriesGrid";
 
 // Verificar autenticación
 const currentUser = getPublicAuthUser(Astro.request);
@@ -46,96 +47,13 @@ const favoriteSeries = allSeries.filter((serie) =>
 
       {
         favoriteSeries.length > 0 ? (
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {favoriteSeries.map((serie) => (
-              <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                <div class="aspect-[2/3] relative">
-                  {serie.posterUrl ? (
-                    <img
-                      src={serie.posterUrl}
-                      alt={serie.title}
-                      class="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span class="text-6xl">🎬</span>
-                    </div>
-                  )}
-                  <div class="absolute top-2 right-2">
-                    <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                      ❤️ Favorita
-                    </span>
-                  </div>
-                </div>
-
-                <div class="p-4">
-                  <h3 class="font-bold text-lg text-gray-800 mb-2">
-                    {serie.title}
-                  </h3>
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm text-gray-600">{serie.startYear}</span>
-                    <span class="bg-yellow-400 text-black px-2 py-1 rounded text-xs font-bold">
-                      ⭐ {serie.imdbRating}
-                    </span>
-                  </div>
-
-                  <div class="flex flex-wrap gap-1 mb-3">
-                    {serie.genre.slice(0, 2).map((g) => (
-                      <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                        {g}
-                      </span>
-                    ))}
-                  </div>
-
-                  <p
-                    class="text-gray-600 text-sm mb-3 overflow-hidden"
-                    style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;"
-                  >
-                    {serie.description}
-                  </p>
-
-                  <div class="flex gap-2">
-                    <a
-                      href={`/series/${serie.slug}`}
-                      class="flex-1 bg-slate-700 text-white text-center py-2 px-3 rounded-md hover:bg-slate-800 transition-colors text-sm font-medium"
-                    >
-                      Ver Detalles
-                    </a>
-                    <button
-                      class={`border-2 p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed ${
-                        userData.watchlistSeries?.includes(serie.slug)
-                          ? "bg-blue-500 border-blue-500 text-white"
-                          : "border-blue-500 text-blue-500 hover:bg-blue-50"
-                      }`}
-                      data-serie={serie.slug}
-                      data-action={
-                        userData.watchlistSeries?.includes(serie.slug)
-                          ? "remove"
-                          : "add"
-                      }
-                      onclick="toggleWatchlist(this)"
-                      title={
-                        userData.watchlistSeries?.includes(serie.slug)
-                          ? "Quitar de Mi Lista"
-                          : "Agregar a Mi Lista"
-                      }
-                    >
-                      🔖
-                    </button>
-                    <button
-                      class="border-2 bg-red-500 border-red-500 text-white p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed"
-                      data-serie={serie.slug}
-                      data-action="remove"
-                      onclick="toggleFavorite(this)"
-                      title="Quitar de favoritos"
-                    >
-                      ❤️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <SeriesGrid
+            client:load
+            initialSeries={favoriteSeries}
+            userFavorites={userData.favoritesSeries}
+            userWatchlist={userData.watchlistSeries}
+            isAuthenticated={true}
+          />
         ) : (
           <div class="text-center py-16">
             <div class="text-6xl mb-4">💔</div>
@@ -155,118 +73,5 @@ const favoriteSeries = allSeries.filter((serie) =>
         )
       }
     </main>
-
-    <script>
-      async function toggleFavorite(button: HTMLButtonElement) {
-        if (button.disabled) return;
-
-        button.disabled = true;
-
-        try {
-          const serieSlug = button.dataset.serie;
-          const action = button.dataset.action;
-
-          const response = await fetch("/api/favorites", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "same-origin", // Incluir cookies
-            body: JSON.stringify({ serieSlug, action }),
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              // Si se está removiendo de favoritos en esta página, ocultar el elemento
-              if (action === "remove") {
-                const card = button.closest(".bg-white") as HTMLElement;
-                if (card) {
-                  card.style.opacity = "0.5";
-                  card.style.transform = "scale(0.95)";
-                  setTimeout(() => {
-                    card.remove();
-                    // Verificar si ya no hay favoritos y mostrar mensaje
-                    const remaining = document.querySelectorAll(
-                      ".bg-white.rounded-xl"
-                    ).length;
-                    if (remaining === 1) {
-                      // El que acabamos de eliminar
-                      location.reload();
-                    }
-                  }, 300);
-                }
-              }
-            } else {
-              alert("Error al actualizar favoritos: " + result.error);
-            }
-          } else {
-            const error = await response.json();
-            alert("Error: " + error.error);
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          alert("Error de conexión");
-        } finally {
-          button.disabled = false;
-        }
-      }
-
-      // Hacer la función global
-      (window as any).toggleFavorite = toggleFavorite;
-
-      // Función para manejar la watchlist
-      async function toggleWatchlist(button: HTMLButtonElement) {
-        if (button.disabled) return;
-
-        button.disabled = true;
-        const originalText = button.textContent;
-
-        try {
-          const serieSlug = button.dataset.serie;
-          const action = button.dataset.action;
-
-          const response = await fetch("/api/watchlist", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "same-origin",
-            body: JSON.stringify({ serieSlug, action }),
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-              // Actualizar el botón según la acción
-              if (action === "add") {
-                button.className =
-                  "border-2 bg-blue-500 border-blue-500 text-white p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed";
-                button.dataset.action = "remove";
-                button.title = "Quitar de Mi Lista";
-              } else {
-                button.className =
-                  "border-2 border-blue-500 text-blue-500 hover:bg-blue-50 p-2 rounded-md transition-all duration-200 min-w-[40px] flex items-center justify-center hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed";
-                button.dataset.action = "add";
-                button.title = "Agregar a Mi Lista";
-              }
-            } else {
-              alert("Error al actualizar Mi Lista: " + result.error);
-            }
-          } else {
-            const error = await response.json();
-            alert("Error: " + error.error);
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          alert("Error de conexión");
-        } finally {
-          button.disabled = false;
-        }
-      }
-
-      // Hacer la función global
-      (window as any).toggleWatchlist = toggleWatchlist;
-    </script>
   </body>
 </html>
