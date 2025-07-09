@@ -568,16 +568,24 @@ const user = protectAdminPage(Astro.request);
           const formData = new FormData(form);
 
           // Procesar plataformas seleccionadas
-          var selectedPlatforms = [];
+          const selectedPlatforms: Array<{
+            name: string;
+            available: boolean;
+            isPremium: boolean;
+          }> = [];
+
           var platformCheckboxes = document.querySelectorAll("[data-platform]");
           for (var i = 0; i < platformCheckboxes.length; i++) {
             var checkbox = platformCheckboxes[i];
             if (checkbox instanceof HTMLInputElement && checkbox.checked) {
-              selectedPlatforms.push({
-                name: checkbox.dataset.platform,
-                available: true,
-                isPremium: true,
-              });
+              var platformName = checkbox.dataset.platform;
+              if (platformName) {
+                selectedPlatforms.push({
+                  name: platformName,
+                  available: true,
+                  isPremium: true,
+                });
+              }
             }
           }
 

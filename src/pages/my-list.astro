@@ -1,5 +1,5 @@
 ---
-import { getUserById, getSerieBySlug } from "../lib/mongo";
+import { getUserById, getSerieBySlug, type User, type Serie } from "../lib/mongo";
 import { getPublicAuthUser } from "../lib/publicAuth";
 import ResponsiveNav from "../components/ResponsiveNav.astro";
 import "../styles/global.css";
@@ -17,7 +17,7 @@ if (!userData) {
 }
 
 // Obtener las series de la watchlist
-const watchlistSeries = [];
+const watchlistSeries: Serie[] = [];
 if (userData.watchlistSeries && userData.watchlistSeries.length > 0) {
   for (const slug of userData.watchlistSeries) {
     try {
@@ -26,7 +26,7 @@ if (userData.watchlistSeries && userData.watchlistSeries.length > 0) {
         watchlistSeries.push(serie);
       }
     } catch (error) {
-      console.error(`Error obteniendo serie ${slug}:`, error);
+      // Error obteniendo serie, continuar con la siguiente
     }
   }
 }

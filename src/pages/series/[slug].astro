@@ -6,6 +6,7 @@ import {
   getSerieBySlug,
   getAnalisisBySerie,
   getUserById,
+  type User,
 } from "../../lib/mongo";
 import { getPublicAuthUser } from "../../lib/publicAuth";
 import "../../styles/global.css";
@@ -28,7 +29,7 @@ if (!serie) {
 
 // Obtener usuario autenticado y sus datos
 const currentUser = getPublicAuthUser(Astro.request);
-let userData = null;
+let userData: User | null = null;
 if (currentUser) {
   userData = await getUserById(currentUser.id);
 }

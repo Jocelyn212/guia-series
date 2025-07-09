@@ -762,6 +762,32 @@ try {
 
     <script>
       // @ts-nocheck - JavaScript puro sin tipos
+      
+      // Suprimir errores de extensiones del navegador
+      window.addEventListener('error', function(e) {
+        // Ignorar errores de extensiones del navegador
+        if (e.message && e.message.includes('message channel closed')) {
+          e.preventDefault();
+          return false;
+        }
+      });
+
+      // Suprimir errores de promesas no manejadas relacionados con extensiones
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && e.reason.message && e.reason.message.includes('message channel closed')) {
+          e.preventDefault();
+          return false;
+        }
+      });
+
+      // Funciones globales para el modal
+      window.closeEditModal = function () {
+        const modal = document.getElementById("editModal");
+        if (modal) {
+          modal.classList.add("hidden");
+          modal.style.display = "none";
+        }
+      };
 
       // Event delegation para los botones
       document.addEventListener("click", function (e) {
@@ -773,22 +799,31 @@ try {
       });
 
       // Búsqueda en tiempo real
-      document.getElementById("search").addEventListener("input", function (e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll(".serie-row");
+      const searchInput = document.getElementById("search");
+      if (searchInput) {
+        searchInput.addEventListener("input", function (e) {
+          const target = e.target;
+          if (target && target instanceof HTMLInputElement) {
+            const searchTerm = target.value.toLowerCase();
+            const rows = document.querySelectorAll(".serie-row");
 
-        rows.forEach((row) => {
-          const serieData = JSON.parse(row.dataset.serie);
-          const searchText =
-            `${serieData.title} ${serieData.network} ${(serieData.genre || []).join(" ")}`.toLowerCase();
+            rows.forEach((row) => {
+              const serieDataAttr = row.getAttribute("data-serie");
+              if (serieDataAttr) {
+                const serieData = JSON.parse(serieDataAttr);
+                const searchText =
+                  `${serieData.title} ${serieData.network} ${(serieData.genre || []).join(" ")}`.toLowerCase();
 
-          if (searchText.includes(searchTerm)) {
-            row.style.display = "";
-          } else {
-            row.style.display = "none";
+                if (searchText.includes(searchTerm)) {
+                  row.style.display = "";
+                } else {
+                  row.style.display = "none";
+                }
+              }
+            });
           }
         });
-      });
+      }
 
       // Funciones de gestión
       function editSerie(id) {
@@ -796,42 +831,56 @@ try {
         let serieData = null;
 
         rows.forEach((row) => {
-          const data = JSON.parse(row.dataset.serie);
-          if (data._id === id) {
-            serieData = data;
+          const dataAttr = row.getAttribute("data-serie");
+          if (dataAttr) {
+            const data = JSON.parse(dataAttr);
+            if (data._id === id) {
+              serieData = data;
+            }
           }
         });
 
         if (!serieData) return;
 
-        // Llenar el formulario de edición
-        document.getElementById("editId").value = serieData._id;
-        document.getElementById("editTitle").value = serieData.title;
-        document.getElementById("editSlug").value = serieData.slug;
-        document.getElementById("editDescription").value =
-          serieData.description || "";
-        document.getElementById("editGenres").value = (
-          serieData.genre || []
-        ).join(", ");
-        document.getElementById("editNetwork").value = serieData.network || "";
-        document.getElementById("editStatus").value = serieData.status;
-        document.getElementById("editStartYear").value = serieData.startYear;
-        document.getElementById("editEndYear").value = serieData.endYear || "";
-        document.getElementById("editTotalSeasons").value =
-          serieData.totalSeasons;
-        document.getElementById("editTotalEpisodes").value =
-          serieData.totalEpisodes;
-        document.getElementById("editImdbId").value = serieData.imdbId || "";
-        document.getElementById("editImdbRating").value =
-          serieData.imdbRating || "";
-        document.getElementById("editPosterUrl").value =
-          serieData.posterUrl || "";
-        document.getElementById("editBackdropUrl").value =
-          serieData.backdropUrl || "";
-        document.getElementById("editTrailerUrl").value =
-          serieData.trailerUrl || "";
-        document.getElementById("editLgbtqContent").checked =
-          serieData.lgbtqContent || false;
+        // Llenar el formulario de edición con validación de elementos
+        const setInputValue = (id, value) => {
+          const element = document.getElementById(id);
+          if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+            element.value = value || "";
+          }
+        };
+
+        const setSelectValue = (id, value) => {
+          const element = document.getElementById(id);
+          if (element instanceof HTMLSelectElement) {
+            element.value = value || "";
+          }
+        };
+
+        const setCheckboxValue = (id, value) => {
+          const element = document.getElementById(id);
+          if (element instanceof HTMLInputElement && element.type === "checkbox") {
+            element.checked = value || false;
+          }
+        };
+
+        setInputValue("editId", serieData._id);
+        setInputValue("editTitle", serieData.title);
+        setInputValue("editSlug", serieData.slug);
+        setInputValue("editDescription", serieData.description);
+        setInputValue("editGenres", (serieData.genre || []).join(", "));
+        setInputValue("editNetwork", serieData.network);
+        setSelectValue("editStatus", serieData.status);
+        setInputValue("editStartYear", serieData.startYear);
+        setInputValue("editEndYear", serieData.endYear);
+        setInputValue("editTotalSeasons", serieData.totalSeasons);
+        setInputValue("editTotalEpisodes", serieData.totalEpisodes);
+        setInputValue("editImdbId", serieData.imdbId);
+        setInputValue("editImdbRating", serieData.imdbRating);
+        setInputValue("editPosterUrl", serieData.posterUrl);
+        setInputValue("editBackdropUrl", serieData.backdropUrl);
+        setInputValue("editTrailerUrl", serieData.trailerUrl);
+        setCheckboxValue("editLgbtqContent", serieData.lgbtqContent);
 
         // Limpiar y seleccionar plataformas
         document.querySelectorAll('[data-platform]').forEach(function(checkbox) {
@@ -850,14 +899,20 @@ try {
         }
 
         // Mostrar modal
-        document.getElementById("editModal").classList.remove("hidden");
-        document.getElementById("editModal").style.display = "flex";
+        const modal = document.getElementById("editModal");
+        if (modal) {
+          modal.classList.remove("hidden");
+          modal.style.display = "flex";
+        }
       }
 
       // Funciones globales para el modal
       window.closeEditModal = function () {
-        document.getElementById("editModal").classList.add("hidden");
-        document.getElementById("editModal").style.display = "none";
+        const modal = document.getElementById("editModal");
+        if (modal) {
+          modal.classList.add("hidden");
+          modal.style.display = "none";
+        }
       };
 
       function deleteSerie(id, title) {
@@ -895,13 +950,38 @@ try {
       }
 
       // Manejar envío del formulario de edición
-      document
-        .getElementById("editForm")
-        .addEventListener("submit", function (e) {
+      const editForm = document.getElementById("editForm");
+      if (editForm) {
+        editForm.addEventListener("submit", function (e) {
           e.preventDefault();
 
+          // Funciones auxiliares para obtener valores de elementos
+          const getInputValue = (id) => {
+            const element = document.getElementById(id);
+            if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+              return element.value;
+            }
+            return "";
+          };
+
+          const getSelectValue = (id) => {
+            const element = document.getElementById(id);
+            if (element instanceof HTMLSelectElement) {
+              return element.value;
+            }
+            return "";
+          };
+
+          const getCheckboxValue = (id) => {
+            const element = document.getElementById(id);
+            if (element instanceof HTMLInputElement && element.type === "checkbox") {
+              return element.checked;
+            }
+            return false;
+          };
+
           // Procesar géneros
-          const genresInput = document.getElementById("editGenres").value;
+          const genresInput = getInputValue("editGenres");
           const genres = genresInput
             .split(",")
             .map((g) => g.trim())
@@ -911,40 +991,37 @@ try {
           const selectedPlatforms = [];
           document.querySelectorAll('[data-platform]').forEach(checkbox => {
             if (checkbox instanceof HTMLInputElement && checkbox.checked) {
-              selectedPlatforms.push({
-                name: checkbox.dataset.platform,
-                available: true,
-                isPremium: true // Por defecto, todas las plataformas de streaming son premium
-              });
+              const platformName = checkbox.dataset.platform;
+              if (platformName) {
+                selectedPlatforms.push({
+                  name: platformName,
+                  available: true,
+                  isPremium: true
+                });
+              }
             }
           });
 
           const data = {
-            id: document.getElementById("editId").value,
-            title: document.getElementById("editTitle").value,
-            slug: document.getElementById("editSlug").value,
-            description: document.getElementById("editDescription").value,
+            id: getInputValue("editId"),
+            title: getInputValue("editTitle"),
+            slug: getInputValue("editSlug"),
+            description: getInputValue("editDescription"),
             genre: genres,
-            network: document.getElementById("editNetwork").value,
-            status: document.getElementById("editStatus").value,
-            startYear: parseInt(document.getElementById("editStartYear").value),
-            endYear: document.getElementById("editEndYear").value
-              ? parseInt(document.getElementById("editEndYear").value)
+            network: getInputValue("editNetwork"),
+            status: getSelectValue("editStatus"),
+            startYear: parseInt(getInputValue("editStartYear")),
+            endYear: getInputValue("editEndYear")
+              ? parseInt(getInputValue("editEndYear"))
               : null,
-            totalSeasons: parseInt(
-              document.getElementById("editTotalSeasons").value
-            ),
-            totalEpisodes: parseInt(
-              document.getElementById("editTotalEpisodes").value
-            ),
-            imdbId: document.getElementById("editImdbId").value,
-            imdbRating: parseFloat(
-              document.getElementById("editImdbRating").value
-            ),
-            posterUrl: document.getElementById("editPosterUrl").value,
-            backdropUrl: document.getElementById("editBackdropUrl").value,
-            trailerUrl: document.getElementById("editTrailerUrl").value,
-            lgbtqContent: document.getElementById("editLgbtqContent").checked,
+            totalSeasons: parseInt(getInputValue("editTotalSeasons")),
+            totalEpisodes: parseInt(getInputValue("editTotalEpisodes")),
+            imdbId: getInputValue("editImdbId"),
+            imdbRating: parseFloat(getInputValue("editImdbRating")),
+            posterUrl: getInputValue("editPosterUrl"),
+            backdropUrl: getInputValue("editBackdropUrl"),
+            trailerUrl: getInputValue("editTrailerUrl"),
+            lgbtqContent: getCheckboxValue("editLgbtqContent"),
             platforms: selectedPlatforms,
           };
 
@@ -972,37 +1049,47 @@ try {
               alert("Error actualizando la serie");
             });
         });
+      }
 
       // Auto-generar slug al cambiar el título
-      document
-        .getElementById("editTitle")
-        .addEventListener("input", function (e) {
-          const title = e.target.value;
-          const slug = title
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, "")
-            .replace(/\s+/g, "-")
-            .replace(/-+/g, "-")
-            .trim();
-          document.getElementById("editSlug").value = slug;
-        });
-
-      // Cerrar modal al hacer clic fuera de él
-      document
-        .getElementById("editModal")
-        .addEventListener("click", function (e) {
-          if (e.target === this) {
-            closeEditModal();
+      const editTitle = document.getElementById("editTitle");
+      if (editTitle) {
+        editTitle.addEventListener("input", function (e) {
+          const target = e.target;
+          if (target instanceof HTMLInputElement) {
+            const title = target.value;
+            const slug = title
+              .toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, "")
+              .replace(/\s+/g, "-")
+              .replace(/-+/g, "-")
+              .trim();
+            
+            const editSlug = document.getElementById("editSlug");
+            if (editSlug instanceof HTMLInputElement) {
+              editSlug.value = slug;
+            }
           }
         });
+      }
+
+      // Cerrar modal al hacer clic fuera de él
+      const editModal = document.getElementById("editModal");
+      if (editModal) {
+        editModal.addEventListener("click", function (e) {
+          if (e.target === this) {
+            window.closeEditModal();
+          }
+        });
+      }
 
       // Cerrar modal con tecla Escape
       document.addEventListener("keydown", function (e) {
-        if (
-          e.key === "Escape" &&
-          !document.getElementById("editModal").classList.contains("hidden")
-        ) {
-          closeEditModal();
+        if (e.key === "Escape") {
+          const modal = document.getElementById("editModal");
+          if (modal && !modal.classList.contains("hidden")) {
+            window.closeEditModal();
+          }
         }
       });
     </script>

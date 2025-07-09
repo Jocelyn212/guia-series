@@ -1,6 +1,6 @@
 ---
 import { protectAdminPage } from "../../lib/adminSecurity";
-import { getAnalisisById } from "../../lib/mongo";
+import { getAnalisisById, type Analisis } from "../../lib/mongo";
 import "../../styles/global.css";
 
 // Proteger página de administración
@@ -9,7 +9,7 @@ const user = protectAdminPage(Astro.request);
 // Obtener ID del análisis desde la URL
 const analysisId = Astro.url.searchParams.get('id');
 
-let analysis = null;
+let analysis: Analisis | null = null;
 let error = '';
 
 if (analysisId) {
@@ -20,7 +20,6 @@ if (analysisId) {
     }
   } catch (err) {
     error = 'Error cargando análisis';
-    console.error('Error loading analysis:', err);
   }
 } else {
   error = 'ID de análisis no proporcionado';
