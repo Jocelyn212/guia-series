@@ -34,20 +34,27 @@ if (currentUser) {
     <main class="max-w-6xl mx-auto px-4">
       <!-- Hero Section -->
       <section class="text-center py-16">
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-12 shadow-xl">
-          <h1 class="text-5xl font-bold mb-6">
-            Análisis Profundos
-          </h1>
+        <div
+          class="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-12 shadow-xl"
+        >
+          <h1 class="text-5xl font-bold mb-6">Análisis Profundos</h1>
           <p class="text-xl opacity-90 max-w-3xl mx-auto leading-relaxed">
-            Sumérgete en interpretaciones expertas, teorías fascinantes y análisis detallados 
-            de los episodios y series más impactantes de la televisión moderna.
+            Sumérgete en interpretaciones expertas, teorías fascinantes y
+            análisis detallados de los episodios y series más impactantes de la
+            televisión moderna.
           </p>
           <div class="mt-8 flex justify-center gap-4 text-sm">
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
               <span class="font-semibold">{analisisData.length}</span> análisis publicados
             </div>
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-              <span class="font-semibold">{analisisData.reduce((sum, item) => sum + (item.views || 0), 0).toLocaleString()}</span> visualizaciones
+              <span class="font-semibold"
+                >{
+                  analisisData
+                    .reduce((sum, item) => sum + (item.views || 0), 0)
+                    .toLocaleString()
+                }</span
+              > visualizaciones
             </div>
           </div>
         </div>
@@ -64,49 +71,50 @@ if (currentUser) {
           </p>
         </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {
-          analisisData.map((item) => (
-            <FringeCard
-              client:load
-              title={item.title}
-              excerpt={item.excerpt}
-              description={item.content}
-              universe={item.universe || "blue"}
-              author={item.author}
-              readTime={item.readTime}
-              views={item.views}
-              likes={item.likes}
-              publishedAt={item.publishedAt}
-              slug={item.slug}
-              analysisId={item._id?.toString()}
-              isLiked={
-                userData?.likedAnalysis?.includes(item._id?.toString() || "") ||
-                false
-              }
-              isAuthenticated={!!currentUser}
-            />
-          ))
-        }
-      </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {
+            analisisData.map((item) => (
+              <FringeCard
+                client:load
+                title={item.title}
+                excerpt={item.excerpt}
+                description={item.content}
+                universe={item.universe || "blue"}
+                author={item.author}
+                readTime={item.readTime}
+                views={item.views}
+                likes={item.likes}
+                publishedAt={item.publishedAt}
+                slug={item.slug}
+                analysisId={item._id?.toString()}
+                isLiked={
+                  userData?.likedAnalysis?.includes(
+                    item._id?.toString() || ""
+                  ) || false
+                }
+                isAuthenticated={!!currentUser}
+              />
+            ))
+          }
+        </div>
 
-      {/* Empty State */}
-      {
-        analisisData.length === 0 && (
-          <div class="text-center py-16">
-            <div class="bg-white rounded-2xl p-12 shadow-lg">
-              <div class="text-6xl mb-6">📝</div>
-              <h3 class="text-2xl font-bold text-gray-700 mb-4">
-                No hay análisis disponibles
-              </h3>
-              <p class="text-gray-500 text-lg">
-                Los análisis se publicarán próximamente. ¡Mantente atento!
-              </p>
+        {/* Empty State */}
+        {
+          analisisData.length === 0 && (
+            <div class="text-center py-16">
+              <div class="bg-white rounded-2xl p-12 shadow-lg">
+                <div class="text-6xl mb-6">📝</div>
+                <h3 class="text-2xl font-bold text-gray-700 mb-4">
+                  No hay análisis disponibles
+                </h3>
+                <p class="text-gray-500 text-lg">
+                  Los análisis se publicarán próximamente. ¡Mantente atento!
+                </p>
+              </div>
             </div>
-          </div>
-        )
-      }
-    </section>
+          )
+        }
+      </section>
     </main>
 
     <!-- Footer -->

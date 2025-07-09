@@ -88,10 +88,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Si necesita actualización, actualizar la contraseña en la base de datos
     if (passwordResult.needsUpdate && passwordResult.newHash) {
-      console.log(
-        "🔄 Migrando contraseña a bcrypt para usuario:",
-        user.username
-      );
       await updateUserPassword(
         (user._id as any).toString(),
         passwordResult.newHash

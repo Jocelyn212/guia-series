@@ -50,7 +50,6 @@ if (Astro.request.method === "POST") {
         const newUser = await createUser(userData);
         if (newUser) {
           success = true;
-          console.log("Usuario creado exitosamente:", { username, email });
         } else {
           error = "Error al crear el usuario";
         }

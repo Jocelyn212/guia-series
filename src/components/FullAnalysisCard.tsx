@@ -155,7 +155,6 @@ export default function FullAnalysisCard({
                   className="w-8 h-8 rounded-full border-2 border-white/20"
                   onError={(e) => {
                     // Si la imagen falla, mostrar un avatar con iniciales
-                    console.log('Error cargando avatar:', author.avatar);
                     e.currentTarget.style.display = 'none';
                     const initials = e.currentTarget.nextElementSibling as HTMLElement;
                     if (initials) initials.style.display = 'flex';

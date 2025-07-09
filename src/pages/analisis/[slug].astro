@@ -22,15 +22,15 @@ if (!analysis) {
 const currentUser = getPublicAuthUser(Astro.request);
 
 // Incrementar vista automáticamente
-await incrementAnalysisViews(analysis._id?.toString() || '');
+await incrementAnalysisViews(analysis._id?.toString() || "");
 
 // Función para parsear contenido con formato markdown básico
 function parseContent(content: string): string {
   return content
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/\n\n/g, "</p><p>")
+    .replace(/\n/g, "<br>");
 }
 
 const formattedContent = parseContent(analysis.content);
@@ -42,21 +42,30 @@ const formattedContent = parseContent(analysis.content);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{analysis.title} | Análisis - SeriesGuide</title>
-    <meta name="description" content={analysis.excerpt || analysis.content.substring(0, 160)} />
+    <meta
+      name="description"
+      content={analysis.excerpt || analysis.content.substring(0, 160)}
+    />
     <link rel="canonical" href={`/analisis/${slug}`} />
-    
+
     <!-- Open Graph -->
     <meta property="og:title" content={analysis.title} />
-    <meta property="og:description" content={analysis.excerpt || analysis.content.substring(0, 160)} />
+    <meta
+      property="og:description"
+      content={analysis.excerpt || analysis.content.substring(0, 160)}
+    />
     <meta property="og:type" content="article" />
     <meta property="og:url" content={`/analisis/${slug}`} />
-    
+
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={analysis.title} />
-    <meta name="twitter:description" content={analysis.excerpt || analysis.content.substring(0, 160)} />
+    <meta
+      name="twitter:description"
+      content={analysis.excerpt || analysis.content.substring(0, 160)}
+    />
   </head>
-  
+
   <body class="bg-gray-50">
     <!-- Navigation -->
     <ResponsiveNav />
@@ -74,86 +83,134 @@ const formattedContent = parseContent(analysis.content);
       <!-- Header del análisis -->
       <header class="mb-8">
         <div class="flex items-center gap-3 mb-4">
-          <span class={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
-            analysis.universe === 'blue' 
-              ? 'bg-slate-100 text-slate-700' 
-              : 'bg-purple-100 text-purple-700'
-          }`}>
-            {analysis.universe === 'blue' ? 'Análisis Principal' : 'Análisis Alternativo'}
+          <span
+            class={`inline-block px-3 py-1 text-sm font-medium rounded-full ${
+              analysis.universe === "blue"
+                ? "bg-slate-100 text-slate-700"
+                : "bg-purple-100 text-purple-700"
+            }`}
+          >
+            {
+              analysis.universe === "blue"
+                ? "Análisis Principal"
+                : "Análisis Alternativo"
+            }
           </span>
-          {analysis.tags && analysis.tags.length > 0 && (
-            <div class="flex flex-wrap gap-2">
-              {analysis.tags.map((tag: string) => (
-                <span class="bg-blue-100 text-blue-700 px-2 py-1 text-xs rounded">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
+          {
+            analysis.tags && analysis.tags.length > 0 && (
+              <div class="flex flex-wrap gap-2">
+                {analysis.tags.map((tag: string) => (
+                  <span class="bg-blue-100 text-blue-700 px-2 py-1 text-xs rounded">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )
+          }
         </div>
 
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+        <h1
+          class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight"
+        >
           {analysis.title}
         </h1>
 
-        {analysis.excerpt && (
-          <p class="text-xl text-gray-600 mb-6 leading-relaxed">
-            {analysis.excerpt}
-          </p>
-        )}
+        {
+          analysis.excerpt && (
+            <p class="text-xl text-gray-600 mb-6 leading-relaxed">
+              {analysis.excerpt}
+            </p>
+          )
+        }
 
         <!-- Metadata -->
-        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 border-b pb-4">
-          {analysis.author && (
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-                {analysis.author.avatar && !analysis.author.avatar.includes('placeholder.com') ? (
-                  <img 
-                    src={analysis.author.avatar} 
-                    alt={analysis.author.name || 'Autor'}
-                    class="w-full h-full object-cover"
-                    onerror="console.log('Error cargando avatar:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                  />
-                ) : null}
-                <span class="text-gray-600 font-medium" style={`display: ${analysis.author.avatar && !analysis.author.avatar.includes('placeholder.com') ? 'none' : 'flex'}`}>
-                  {analysis.author.name?.charAt(0)?.toUpperCase() || 'A'}
-                </span>
+        <div
+          class="flex flex-wrap items-center gap-4 text-sm text-gray-500 border-b pb-4"
+        >
+          {
+            analysis.author && (
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
+                  {analysis.author.avatar &&
+                  !analysis.author.avatar.includes("placeholder.com") ? (
+                    <img
+                      src={analysis.author.avatar}
+                      alt={analysis.author.name || "Autor"}
+                      class="w-full h-full object-cover"
+                      onerror="console.log('Error cargando avatar:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    />
+                  ) : null}
+                  <span
+                    class="text-gray-600 font-medium"
+                    style={`display: ${analysis.author.avatar && !analysis.author.avatar.includes("placeholder.com") ? "none" : "flex"}`}
+                  >
+                    {analysis.author.name?.charAt(0)?.toUpperCase() || "A"}
+                  </span>
+                </div>
+                <span>Por {analysis.author.name || "Anónimo"}</span>
               </div>
-              <span>Por {analysis.author.name || 'Anónimo'}</span>
-            </div>
-          )}
-          
-          {analysis.publishedAt && (
-            <time datetime={analysis.publishedAt.toISOString()}>
-              {analysis.publishedAt.toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </time>
-          )}
-          
-          {analysis.readTime && (
-            <span>{analysis.readTime} minutos de lectura</span>
-          )}
-          
+            )
+          }
+
+          {
+            analysis.publishedAt && (
+              <time datetime={analysis.publishedAt.toISOString()}>
+                {analysis.publishedAt.toLocaleDateString("es-ES", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </time>
+            )
+          }
+
+          {
+            analysis.readTime && (
+              <span>{analysis.readTime} minutos de lectura</span>
+            )
+          }
+
           <div class="flex items-center gap-4">
             <span class="flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                ></path>
               </svg>
               {(analysis.views || 0) + 1} visualizaciones
             </span>
-            
-            <button 
+
+            <button
               id="likeButton"
               class="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors"
-              data-analysis-id={analysis._id?.toString() || ''}
+              data-analysis-id={analysis._id?.toString() || ""}
               data-is-liked="false"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                ></path>
               </svg>
               <span id="likeCount">{analysis.likes || 0}</span>
             </button>
@@ -171,12 +228,21 @@ const formattedContent = parseContent(analysis.content);
       <!-- Navegación entre análisis -->
       <div class="mt-12 pt-8 border-t">
         <div class="flex justify-center">
-          <a 
+          <a
             href="/analisis"
             class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
             Volver a todos los análisis
           </a>
@@ -186,52 +252,54 @@ const formattedContent = parseContent(analysis.content);
 
     <!-- Script para manejar likes -->
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const likeButton = document.getElementById('likeButton');
-        const likeCount = document.getElementById('likeCount');
-        
+      document.addEventListener("DOMContentLoaded", function () {
+        const likeButton = document.getElementById("likeButton");
+        const likeCount = document.getElementById("likeCount");
+
         if (likeButton && likeCount) {
-          likeButton.addEventListener('click', async function(e) {
+          likeButton.addEventListener("click", async function (e) {
             e.preventDefault();
-            
+
             const analysisId = this.dataset.analysisId;
-            const isLiked = this.dataset.isLiked === 'true';
-            
+            const isLiked = this.dataset.isLiked === "true";
+
             try {
-              const response = await fetch('/api/analysis-likes', {
-                method: 'POST',
+              const response = await fetch("/api/analysis-likes", {
+                method: "POST",
                 headers: {
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                 },
-                credentials: 'same-origin',
+                credentials: "same-origin",
                 body: JSON.stringify({
                   analysisId: analysisId,
-                  action: isLiked ? 'unlike' : 'like'
-                })
+                  action: isLiked ? "unlike" : "like",
+                }),
               });
-              
+
               if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
                   // Actualizar UI
                   this.dataset.isLiked = (!isLiked).toString();
-                  const currentCount = parseInt(likeCount.textContent || '0');
-                  likeCount.textContent = (isLiked ? currentCount - 1 : currentCount + 1).toString();
-                  
+                  const currentCount = parseInt(likeCount.textContent || "0");
+                  likeCount.textContent = (
+                    isLiked ? currentCount - 1 : currentCount + 1
+                  ).toString();
+
                   // Cambiar color del botón
                   if (isLiked) {
-                    this.classList.remove('text-red-500');
-                    this.classList.add('text-gray-500');
+                    this.classList.remove("text-red-500");
+                    this.classList.add("text-gray-500");
                   } else {
-                    this.classList.remove('text-gray-500');
-                    this.classList.add('text-red-500');
+                    this.classList.remove("text-gray-500");
+                    this.classList.add("text-red-500");
                   }
                 } else {
-                  console.error('Error al actualizar like:', result.error);
+                  console.error("Error al actualizar like:", result.error);
                 }
               }
             } catch (error) {
-              console.error('Error:', error);
+              console.error("Error:", error);
             }
           });
         }

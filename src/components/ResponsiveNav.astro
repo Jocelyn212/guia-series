@@ -19,101 +19,114 @@ const currentPath = Astro.url.pathname;
 
       <!-- Desktop Navigation -->
       <div class="hidden md:flex items-center space-x-4">
-        <a 
-          href="/" 
+        <a
+          href="/"
           class={`transition-colors ${
-            currentPath === '/' 
-              ? 'text-slate-700 font-medium' 
-              : 'text-gray-600 hover:text-slate-700'
+            currentPath === "/"
+              ? "text-slate-700 font-medium"
+              : "text-gray-600 hover:text-slate-700"
           }`}
         >
           Series
         </a>
-        <a 
-          href="/analisis" 
+        <a
+          href="/analisis"
           class={`transition-colors ${
-            currentPath === '/analisis' 
-              ? 'text-slate-700 font-medium' 
-              : 'text-gray-600 hover:text-slate-700'
+            currentPath === "/analisis"
+              ? "text-slate-700 font-medium"
+              : "text-gray-600 hover:text-slate-700"
           }`}
         >
           Análisis
         </a>
-        <a 
-          href="/blog" 
+        <a
+          href="/blog"
           class={`transition-colors ${
-            currentPath.startsWith('/blog') 
-              ? 'text-slate-700 font-medium' 
-              : 'text-gray-600 hover:text-slate-700'
+            currentPath.startsWith("/blog")
+              ? "text-slate-700 font-medium"
+              : "text-gray-600 hover:text-slate-700"
           }`}
         >
           Blog
         </a>
-        
-        {user ? (
-          <>
-            <a 
-              href="/my-favorites" 
-              class={`transition-colors ${
-                currentPath === '/my-favorites' 
-                  ? 'text-slate-700 font-medium' 
-                  : 'text-gray-600 hover:text-slate-700'
-              }`}
-            >
-              ❤️ Favoritos
-            </a>
-            <a 
-              href="/my-list" 
-              class={`transition-colors ${
-                currentPath === '/my-list' 
-                  ? 'text-slate-700 font-medium' 
-                  : 'text-gray-600 hover:text-slate-700'
-              }`}
-            >
-              🔖 Mi Lista
-            </a>
-            <span class="text-gray-700 font-semibold text-sm">
-              👋 {user.username}
-            </span>
-            <a
-              href="/logout"
-              class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-all hover:-translate-y-0.5"
-            >
-              Cerrar Sesión
-            </a>
-          </>
-        ) : (
-          <>
-            <a
-              href="/register"
-              class="text-gray-600 hover:text-slate-700 transition-colors text-sm font-medium px-3 py-1.5 rounded-md hover:bg-gray-100"
-            >
-              Registrarse
-            </a>
-            <a
-              href="/user-login"
-              class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-all hover:-translate-y-0.5"
-            >
-              Iniciar Sesión
-            </a>
-          </>
-        )}
+
+        {
+          user ? (
+            <>
+              <a
+                href="/my-favorites"
+                class={`transition-colors ${
+                  currentPath === "/my-favorites"
+                    ? "text-slate-700 font-medium"
+                    : "text-gray-600 hover:text-slate-700"
+                }`}
+              >
+                ❤️ Favoritos
+              </a>
+              <a
+                href="/my-list"
+                class={`transition-colors ${
+                  currentPath === "/my-list"
+                    ? "text-slate-700 font-medium"
+                    : "text-gray-600 hover:text-slate-700"
+                }`}
+              >
+                🔖 Mi Lista
+              </a>
+              <span class="text-gray-700 font-semibold text-sm">
+                👋 {user.username}
+              </span>
+              <a
+                href="/logout"
+                class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-all hover:-translate-y-0.5"
+              >
+                Cerrar Sesión
+              </a>
+            </>
+          ) : (
+            <>
+              <a
+                href="/register"
+                class="text-gray-600 hover:text-slate-700 transition-colors text-sm font-medium px-3 py-1.5 rounded-md hover:bg-gray-100"
+              >
+                Registrarse
+              </a>
+              <a
+                href="/user-login"
+                class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-all hover:-translate-y-0.5"
+              >
+                Iniciar Sesión
+              </a>
+            </>
+          )
+        }
       </div>
 
       <!-- Mobile menu button -->
       <div class="md:hidden flex items-center space-x-3">
-        {user && (
-          <span class="text-gray-700 font-semibold text-sm">
-            👋 {user.username}
-          </span>
-        )}
+        {
+          user && (
+            <span class="text-gray-700 font-semibold text-sm">
+              👋 {user.username}
+            </span>
+          )
+        }
         <button
           id="mobile-menu-button"
           class="text-gray-600 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 p-2 rounded-md"
           aria-label="Abrir menú"
         >
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>
       </div>
@@ -121,89 +134,91 @@ const currentPath = Astro.url.pathname;
   </div>
 
   <!-- Mobile Menu -->
-  <div 
-    id="mobile-menu" 
+  <div
+    id="mobile-menu"
     class="md:hidden hidden bg-white border-t border-gray-200 shadow-lg"
   >
     <div class="px-4 pt-2 pb-3 space-y-1">
-      <a 
-        href="/" 
+      <a
+        href="/"
         class={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
-          currentPath === '/' 
-            ? 'text-slate-700 bg-slate-100' 
-            : 'text-gray-600 hover:text-slate-700 hover:bg-gray-50'
+          currentPath === "/"
+            ? "text-slate-700 bg-slate-100"
+            : "text-gray-600 hover:text-slate-700 hover:bg-gray-50"
         }`}
       >
         📺 Series
       </a>
-      <a 
-        href="/analisis" 
+      <a
+        href="/analisis"
         class={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
-          currentPath === '/analisis' 
-            ? 'text-slate-700 bg-slate-100' 
-            : 'text-gray-600 hover:text-slate-700 hover:bg-gray-50'
+          currentPath === "/analisis"
+            ? "text-slate-700 bg-slate-100"
+            : "text-gray-600 hover:text-slate-700 hover:bg-gray-50"
         }`}
       >
         📝 Análisis
       </a>
-      <a 
-        href="/blog" 
+      <a
+        href="/blog"
         class={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
-          currentPath.startsWith('/blog') 
-            ? 'text-slate-700 bg-slate-100' 
-            : 'text-gray-600 hover:text-slate-700 hover:bg-gray-50'
+          currentPath.startsWith("/blog")
+            ? "text-slate-700 bg-slate-100"
+            : "text-gray-600 hover:text-slate-700 hover:bg-gray-50"
         }`}
       >
         📰 Blog
       </a>
-      
-      {user ? (
-        <>
-          <a 
-            href="/my-favorites" 
-            class={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
-              currentPath === '/my-favorites' 
-                ? 'text-slate-700 bg-slate-100' 
-                : 'text-gray-600 hover:text-slate-700 hover:bg-gray-50'
-            }`}
-          >
-            ❤️ Favoritos
-          </a>
-          <a 
-            href="/my-list" 
-            class={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
-              currentPath === '/my-list' 
-                ? 'text-slate-700 bg-slate-100' 
-                : 'text-gray-600 hover:text-slate-700 hover:bg-gray-50'
-            }`}
-          >
-            🔖 Mi Lista
-          </a>
-          <div class="border-t border-gray-200 pt-2 mt-2">
+
+      {
+        user ? (
+          <>
             <a
-              href="/logout"
-              class="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+              href="/my-favorites"
+              class={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                currentPath === "/my-favorites"
+                  ? "text-slate-700 bg-slate-100"
+                  : "text-gray-600 hover:text-slate-700 hover:bg-gray-50"
+              }`}
             >
-              🚪 Cerrar Sesión
+              ❤️ Favoritos
+            </a>
+            <a
+              href="/my-list"
+              class={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                currentPath === "/my-list"
+                  ? "text-slate-700 bg-slate-100"
+                  : "text-gray-600 hover:text-slate-700 hover:bg-gray-50"
+              }`}
+            >
+              🔖 Mi Lista
+            </a>
+            <div class="border-t border-gray-200 pt-2 mt-2">
+              <a
+                href="/logout"
+                class="block w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+              >
+                🚪 Cerrar Sesión
+              </a>
+            </div>
+          </>
+        ) : (
+          <div class="border-t border-gray-200 pt-2 mt-2 space-y-1">
+            <a
+              href="/register"
+              class="block px-3 py-2 text-base font-medium text-gray-600 hover:text-slate-700 hover:bg-gray-50 rounded-md transition-colors"
+            >
+              📝 Registrarse
+            </a>
+            <a
+              href="/user-login"
+              class="block px-3 py-2 text-base font-medium bg-slate-700 text-white hover:bg-slate-800 rounded-md transition-colors"
+            >
+              🔑 Iniciar Sesión
             </a>
           </div>
-        </>
-      ) : (
-        <div class="border-t border-gray-200 pt-2 mt-2 space-y-1">
-          <a
-            href="/register"
-            class="block px-3 py-2 text-base font-medium text-gray-600 hover:text-slate-700 hover:bg-gray-50 rounded-md transition-colors"
-          >
-            📝 Registrarse
-          </a>
-          <a
-            href="/user-login"
-            class="block px-3 py-2 text-base font-medium bg-slate-700 text-white hover:bg-slate-800 rounded-md transition-colors"
-          >
-            🔑 Iniciar Sesión
-          </a>
-        </div>
-      )}
+        )
+      }
     </div>
   </div>
 </nav>
@@ -211,16 +226,16 @@ const currentPath = Astro.url.pathname;
 <script>
   // Script para el menú móvil
   function initMobileMenu() {
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuButton = document.getElementById("mobile-menu-button");
+    const mobileMenu = document.getElementById("mobile-menu");
 
     if (mobileMenuButton && mobileMenu) {
-      mobileMenuButton.addEventListener('click', function() {
-        const isHidden = mobileMenu.classList.contains('hidden');
-        
+      mobileMenuButton.addEventListener("click", function () {
+        const isHidden = mobileMenu.classList.contains("hidden");
+
         if (isHidden) {
-          mobileMenu.classList.remove('hidden');
-          mobileMenuButton.setAttribute('aria-label', 'Cerrar menú');
+          mobileMenu.classList.remove("hidden");
+          mobileMenuButton.setAttribute("aria-label", "Cerrar menú");
           // Cambiar icono a X
           mobileMenuButton.innerHTML = `
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -228,8 +243,8 @@ const currentPath = Astro.url.pathname;
             </svg>
           `;
         } else {
-          mobileMenu.classList.add('hidden');
-          mobileMenuButton.setAttribute('aria-label', 'Abrir menú');
+          mobileMenu.classList.add("hidden");
+          mobileMenuButton.setAttribute("aria-label", "Abrir menú");
           // Cambiar icono a hamburguesa
           mobileMenuButton.innerHTML = `
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -240,10 +255,11 @@ const currentPath = Astro.url.pathname;
       });
 
       // Cerrar menú al redimensionar ventana (de móvil a desktop)
-      window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768) { // md breakpoint
-          mobileMenu.classList.add('hidden');
-          mobileMenuButton.setAttribute('aria-label', 'Abrir menú');
+      window.addEventListener("resize", function () {
+        if (window.innerWidth >= 768) {
+          // md breakpoint
+          mobileMenu.classList.add("hidden");
+          mobileMenuButton.setAttribute("aria-label", "Abrir menú");
           mobileMenuButton.innerHTML = `
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -255,8 +271,8 @@ const currentPath = Astro.url.pathname;
   }
 
   // Ejecutar cuando el DOM esté listo
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMobileMenu);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMobileMenu);
   } else {
     initMobileMenu();
   }

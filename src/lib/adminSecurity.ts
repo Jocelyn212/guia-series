@@ -5,7 +5,7 @@ import { getPublicAuthUser } from "./publicAuth";
 export function protectAdminPage(request: Request) {
   // Verificar autenticación de administrador
   const adminUser = getServerAuthUser(request);
-  
+
   if (!adminUser || adminUser.role !== "admin") {
     return new Response(null, {
       status: 302,

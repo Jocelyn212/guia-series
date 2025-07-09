@@ -202,7 +202,6 @@ export default function FringeCard({
                       alt={author.name || 'Autor'}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        console.log('Error cargando avatar:', author.avatar);
                         e.currentTarget.style.display = 'none';
                         const initials = e.currentTarget.nextElementSibling as HTMLElement;
                         if (initials) initials.style.display = 'flex';

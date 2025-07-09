@@ -21,58 +21,58 @@ const currentUser = getPublicAuthUser(Astro.request);
 
 // Función para formatear fecha
 function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  return new Date(date).toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
 // Función para obtener color de categoría
 function getCategoryColor(category: string): string {
   switch (category) {
-    case 'news':
-      return 'bg-blue-100 text-blue-800';
-    case 'analysis':
-      return 'bg-purple-100 text-purple-800';
-    case 'interview':
-      return 'bg-green-100 text-green-800';
-    case 'editorial':
-      return 'bg-orange-100 text-orange-800';
+    case "news":
+      return "bg-blue-100 text-blue-800";
+    case "analysis":
+      return "bg-purple-100 text-purple-800";
+    case "interview":
+      return "bg-green-100 text-green-800";
+    case "editorial":
+      return "bg-orange-100 text-orange-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 }
 
 // Función para obtener icono de categoría
 function getCategoryIcon(category: string): string {
   switch (category) {
-    case 'news':
-      return '📰';
-    case 'analysis':
-      return '🔍';
-    case 'interview':
-      return '🎤';
-    case 'editorial':
-      return '✍️';
+    case "news":
+      return "📰";
+    case "analysis":
+      return "🔍";
+    case "interview":
+      return "🎤";
+    case "editorial":
+      return "✍️";
     default:
-      return '📝';
+      return "📝";
   }
 }
 
 // Función para obtener nombre de categoría
 function getCategoryName(category: string): string {
   switch (category) {
-    case 'news':
-      return 'Noticias';
-    case 'analysis':
-      return 'Análisis';
-    case 'interview':
-      return 'Entrevistas';
-    case 'editorial':
-      return 'Editorial';
+    case "news":
+      return "Noticias";
+    case "analysis":
+      return "Análisis";
+    case "interview":
+      return "Entrevistas";
+    case "editorial":
+      return "Editorial";
     default:
-      return 'Artículo';
+      return "Artículo";
   }
 }
 ---
@@ -96,8 +96,17 @@ function getCategoryName(category: string): string {
           href="/blog"
           class="inline-flex items-center text-slate-600 hover:text-slate-800 transition-colors"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"></path>
           </svg>
           Volver al Blog
         </a>
@@ -106,22 +115,27 @@ function getCategoryName(category: string): string {
       <!-- Post Content -->
       <article class="bg-white rounded-xl shadow-lg overflow-hidden">
         {/* Featured Image */}
-        {post.featuredImage && (
-          <div class="h-64 md:h-80 bg-gradient-to-br from-slate-100 to-slate-200">
-            <img
-              src={post.featuredImage}
-              alt={post.title}
-              class="w-full h-full object-cover"
-            />
-          </div>
-        )}
+        {
+          post.featuredImage && (
+            <div class="h-64 md:h-80 bg-gradient-to-br from-slate-100 to-slate-200">
+              <img
+                src={post.featuredImage}
+                alt={post.title}
+                class="w-full h-full object-cover"
+              />
+            </div>
+          )
+        }
 
         {/* Content */}
         <div class="p-8">
           {/* Category */}
           <div class="flex items-center gap-2 mb-4">
-            <span class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(post.category)}`}>
-              {getCategoryIcon(post.category)} {getCategoryName(post.category)}
+            <span
+              class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(post.category)}`}
+            >
+              {getCategoryIcon(post.category)}
+              {getCategoryName(post.category)}
             </span>
           </div>
 
@@ -136,19 +150,23 @@ function getCategoryName(category: string): string {
           </p>
 
           {/* Meta */}
-          <div class="flex items-center justify-between text-sm text-gray-500 mb-8 pb-6 border-b border-gray-200">
+          <div
+            class="flex items-center justify-between text-sm text-gray-500 mb-8 pb-6 border-b border-gray-200"
+          >
             <div class="flex items-center gap-3">
-              {post.author.avatar ? (
-                <img
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  class="w-10 h-10 rounded-full"
-                />
-              ) : (
-                <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                  <span class="text-lg">👤</span>
-                </div>
-              )}
+              {
+                post.author.avatar ? (
+                  <img
+                    src={post.author.avatar}
+                    alt={post.author.name}
+                    class="w-10 h-10 rounded-full"
+                  />
+                ) : (
+                  <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                    <span class="text-lg">👤</span>
+                  </div>
+                )
+              }
               <div>
                 <p class="font-medium text-gray-900">{post.author.name}</p>
                 <p class="text-gray-500">
@@ -156,46 +174,61 @@ function getCategoryName(category: string): string {
                 </p>
               </div>
             </div>
-            
+
             {/* Tags */}
-            {post.tags.length > 0 && (
-              <div class="flex flex-wrap gap-1">
-                {post.tags.map((tag) => (
-                  <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
+            {
+              post.tags.length > 0 && (
+                <div class="flex flex-wrap gap-1">
+                  {post.tags.map((tag) => (
+                    <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )
+            }
           </div>
 
           {/* Article Content */}
           <div class="prose prose-lg max-w-none">
-            {post.content.split('\n\n').map((paragraph, index) => {
-              // Detectar títulos (líneas que empiezan con **)
-              if (paragraph.startsWith('**') && paragraph.endsWith('**') && paragraph.length > 4) {
-                const title = paragraph.slice(2, -2);
-                return (
-                  <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4 first:mt-0">
-                    {title}
-                  </h2>
+            {
+              post.content.split("\n\n").map((paragraph, index) => {
+                // Detectar títulos (líneas que empiezan con **)
+                if (
+                  paragraph.startsWith("**") &&
+                  paragraph.endsWith("**") &&
+                  paragraph.length > 4
+                ) {
+                  const title = paragraph.slice(2, -2);
+                  return (
+                    <h2 class="text-2xl font-bold text-gray-800 mt-8 mb-4 first:mt-0">
+                      {title}
+                    </h2>
+                  );
+                }
+
+                // Procesar texto con formato **bold** dentro de párrafos
+                const processedText = paragraph.replace(
+                  /\*\*(.*?)\*\*/g,
+                  "<strong>$1</strong>"
                 );
-              }
-              
-              // Procesar texto con formato **bold** dentro de párrafos
-              const processedText = paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-              
-              // Párrafos regulares
-              return (
-                <p class="text-gray-700 leading-relaxed mb-4" set:html={processedText}>
-                </p>
-              );
-            })}
+
+                // Párrafos regulares
+                return (
+                  <p
+                    class="text-gray-700 leading-relaxed mb-4"
+                    set:html={processedText}
+                  ></p>
+                );
+              })
+            }
           </div>
 
           {/* Social Sharing */}
           <div class="mt-8 pt-6 border-t border-gray-200">
-            <p class="text-sm text-gray-500 mb-4">¿Te gustó este artículo? Compártelo:</p>
+            <p class="text-sm text-gray-500 mb-4">
+              ¿Te gustó este artículo? Compártelo:
+            </p>
             <div class="flex gap-3">
               <button
                 onclick={`window.open('https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(Astro.url.href)}', '_blank', 'width=600,height=400')`}
@@ -220,8 +253,17 @@ function getCategoryName(category: string): string {
           href="/blog"
           class="inline-flex items-center bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
         >
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"></path>
           </svg>
           Volver al Blog
         </a>

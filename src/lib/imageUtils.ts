@@ -1,16 +1,18 @@
-import type { SyntheticEvent } from 'react'
+import type { SyntheticEvent } from "react";
 
 // Utility para manejar errores de carga de imágenes
-export function handleImageError(event: SyntheticEvent<HTMLImageElement, Event>) {
+export function handleImageError(
+  event: SyntheticEvent<HTMLImageElement, Event>
+) {
   const img = event.target as HTMLImageElement;
   if (img) {
     // Ocultar la imagen que falló
-    img.style.display = 'none';
-    
+    img.style.display = "none";
+
     // Mostrar el fallback si existe
     const fallback = img.nextElementSibling as HTMLElement;
     if (fallback) {
-      fallback.style.display = 'flex';
+      fallback.style.display = "flex";
     }
   }
 }
@@ -18,12 +20,14 @@ export function handleImageError(event: SyntheticEvent<HTMLImageElement, Event>)
 // Función para verificar si una URL de imagen es válida
 export function isValidImageUrl(url: string): boolean {
   if (!url) return false;
-  
+
   try {
     const urlObj = new URL(url);
     // Verificar que no sea una URL de placeholder problemática
-    if (urlObj.hostname.includes('placeholder.com') || 
-        urlObj.hostname.includes('via.placeholder.com')) {
+    if (
+      urlObj.hostname.includes("placeholder.com") ||
+      urlObj.hostname.includes("via.placeholder.com")
+    ) {
       return false;
     }
     return true;

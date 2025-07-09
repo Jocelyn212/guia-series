@@ -1078,15 +1078,11 @@ export async function removeUserWatchlistSerie(
 }
 
 // Obtener análisis por ID
-export async function getAnalisisById(
-  id: string
-): Promise<Analisis | null> {
+export async function getAnalisisById(id: string): Promise<Analisis | null> {
   try {
     await connectMongoDB();
     if (!AnalisisModel) return null;
-    const result = await AnalisisModel.findById(id)
-      .lean()
-      .exec();
+    const result = await AnalisisModel.findById(id).lean().exec();
     return result;
   } catch (error) {
     console.error("Error fetching analysis by ID:", error);

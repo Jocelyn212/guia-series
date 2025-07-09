@@ -40,7 +40,9 @@ async function verifyAdmin() {
     // La contraseña que proporcionaste
     const adminPassword = "0v6nK2e2131eUH+C1ZUnFw==";
 
-    console.log("\n🔍 Probando verificaciones con la contraseña proporcionada:");
+    console.log(
+      "\n🔍 Probando verificaciones con la contraseña proporcionada:"
+    );
 
     // Probar con bcrypt
     try {
@@ -55,7 +57,10 @@ async function verifyAdmin() {
     console.log("Old method result:", oldResult);
 
     // Determinar qué método se está usando
-    if (admin.password.startsWith("$2b$") || admin.password.startsWith("$2a$")) {
+    if (
+      admin.password.startsWith("$2b$") ||
+      admin.password.startsWith("$2a$")
+    ) {
       console.log("🔐 Este usuario usa BCRYPT");
     } else if (admin.password.length === 64) {
       console.log("🔑 Este usuario usa HASH ANTIGUO (crypto + salt)");
@@ -68,12 +73,11 @@ async function verifyAdmin() {
       .createHash("sha256")
       .update(adminPassword + "salt-series-guide")
       .digest("hex");
-    
+
     console.log("\n🔧 Comparación de hashes:");
     console.log("Hash almacenado:", admin.password);
     console.log("Hash generado:  ", testHash);
     console.log("¿Coinciden?    ", admin.password === testHash);
-
   } catch (error) {
     console.error("❌ Error:", error);
   } finally {

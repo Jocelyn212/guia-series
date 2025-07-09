@@ -155,7 +155,8 @@ const user = protectAdminPage(Astro.request);
                 </label>
               </div>
               <p class="text-xs text-gray-400 mt-1 ml-8">
-                Marca esta casilla si la serie incluye personajes principales LGBTIQ+ o temáticas relevantes para la comunidad.
+                Marca esta casilla si la serie incluye personajes principales
+                LGBTIQ+ o temáticas relevantes para la comunidad.
               </p>
             </div>
           </div>
@@ -353,7 +354,7 @@ const user = protectAdminPage(Astro.request);
             <p class="text-sm text-gray-400 mb-4">
               Selecciona todas las plataformas donde está disponible la serie
             </p>
-            
+
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               <div class="flex items-center space-x-2">
                 <input
@@ -565,21 +566,21 @@ const user = protectAdminPage(Astro.request);
           if (!(form instanceof HTMLFormElement)) return;
 
           const formData = new FormData(form);
-          
+
           // Procesar plataformas seleccionadas
           var selectedPlatforms = [];
-          var platformCheckboxes = document.querySelectorAll('[data-platform]');
+          var platformCheckboxes = document.querySelectorAll("[data-platform]");
           for (var i = 0; i < platformCheckboxes.length; i++) {
             var checkbox = platformCheckboxes[i];
             if (checkbox instanceof HTMLInputElement && checkbox.checked) {
               selectedPlatforms.push({
                 name: checkbox.dataset.platform,
                 available: true,
-                isPremium: true
+                isPremium: true,
               });
             }
           }
-          
+
           const data = {
             title: formData.get("title") || "",
             slug: formData.get("slug") || "",
