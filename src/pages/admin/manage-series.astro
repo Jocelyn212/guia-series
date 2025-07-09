@@ -59,6 +59,32 @@ try {
         </div>
       </div>
 
+      <!-- Estadísticas -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">Total Series</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-white">{series.length}</p>
+        </div>
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">En Emisión</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-green-400">
+            {series.filter((s) => s.status === "ongoing").length}
+          </p>
+        </div>
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">Finalizadas</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-blue-400">
+            {series.filter((s) => s.status === "ended").length}
+          </p>
+        </div>
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">Con LGBTIQ+</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-pink-400">
+            {series.filter((s) => s.lgbtqContent).length}
+          </p>
+        </div>
+      </div>
+
       <!-- Buscador -->
       <div class="mb-6">
         <input
@@ -75,26 +101,27 @@ try {
           <div class="bg-red-500 text-white p-4 rounded-lg mb-6">{error}</div>
         ) : (
           <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-            <div class="overflow-x-auto">
+            <!-- Vista de escritorio -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full">
                 <thead class="bg-gray-700">
                   <tr>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Serie
                     </th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden sm:table-cell">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Año
                     </th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden sm:table-cell">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Estado
                     </th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden sm:table-cell">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Rating
                     </th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider hidden sm:table-cell">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Temporadas
                     </th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Acciones
                     </th>
                   </tr>
@@ -105,44 +132,41 @@ try {
                       class="hover:bg-gray-700 transition-colors serie-row"
                       data-serie={JSON.stringify(serie)}
                     >
-                      <td class="px-3 sm:px-6 py-4">
+                      <td class="px-6 py-4">
                         <div class="flex items-center">
                           {serie.posterUrl && (
                             <img
-                              class="h-12 w-8 rounded object-cover mr-3 hidden sm:block"
+                              class="h-12 w-8 rounded object-cover mr-3"
                               src={serie.posterUrl}
                               alt={serie.title}
                             />
                           )}
                           <div class="min-w-0 flex-1">
                             <div class="text-sm font-medium text-white flex items-center gap-2">
-                              <span class="truncate">{serie.title}</span>
+                              <span>{serie.title}</span>
                               {serie.lgbtqContent && (
                                 <span
-                                  class="text-pink-400 flex-shrink-0"
+                                  class="text-pink-400"
                                   title="Contenido LGBTIQ+"
                                 >
                                   🏳️‍🌈
                                 </span>
                               )}
                             </div>
-                            <div class="text-sm text-gray-400 truncate">
+                            <div class="text-sm text-gray-400">
                               {serie.network}
                             </div>
-                            <div class="text-xs text-gray-500 sm:hidden">
-                              {serie.startYear} • {serie.imdbRating}/10
-                            </div>
-                            <div class="text-xs text-gray-500 hidden sm:block">
+                            <div class="text-xs text-gray-500">
                               {serie.genre?.slice(0, 2).join(", ")}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden sm:table-cell">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {serie.startYear}
                         {serie.endYear && ` - ${serie.endYear}`}
                       </td>
-                      <td class="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                      <td class="px-6 py-4 whitespace-nowrap">
                         <span
                           class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             serie.status === "ongoing"
@@ -159,18 +183,18 @@ try {
                               : "Cancelada"}
                         </span>
                       </td>
-                      <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden sm:table-cell">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {serie.imdbRating}/10
                       </td>
-                      <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300 hidden sm:table-cell">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {serie.totalSeasons} temp. / {serie.totalEpisodes} ep.
                       </td>
-                      <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
-                        <div class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <div class="flex space-x-2">
                           <button
                             data-action="edit"
                             data-id={serie._id}
-                            class="bg-yellow-600 hover:bg-yellow-700 text-white px-2 sm:px-3 py-1 rounded text-xs font-medium transition-colors"
+                            class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                           >
                             Editar
                           </button>
@@ -178,14 +202,14 @@ try {
                             data-action="delete"
                             data-id={serie._id}
                             data-title={serie.title}
-                            class="bg-red-600 hover:bg-red-700 text-white px-2 sm:px-3 py-1 rounded text-xs font-medium transition-colors"
+                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                           >
                             Eliminar
                           </button>
                           <a
                             href={`/series/${serie.slug}`}
                             target="_blank"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-3 py-1 rounded text-xs font-medium transition-colors text-center"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                           >
                             Ver
                           </a>
@@ -195,6 +219,110 @@ try {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <!-- Vista móvil -->
+            <div class="md:hidden divide-y divide-gray-700" id="seriesTableMobile">
+              {series.map((serie) => (
+                <div
+                  class="p-4 serie-row"
+                  data-serie={JSON.stringify(serie)}
+                >
+                  <div class="flex items-start gap-3 mb-3">
+                    {serie.posterUrl && (
+                      <img
+                        class="h-16 w-10 rounded object-cover flex-shrink-0"
+                        src={serie.posterUrl}
+                        alt={serie.title}
+                      />
+                    )}
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 mb-1">
+                        <h3 class="text-white font-medium text-sm leading-tight">
+                          {serie.title}
+                        </h3>
+                        {serie.lgbtqContent && (
+                          <span
+                            class="text-pink-400 flex-shrink-0"
+                            title="Contenido LGBTIQ+"
+                          >
+                            🏳️‍🌈
+                          </span>
+                        )}
+                      </div>
+                      <p class="text-gray-400 text-xs mb-1">
+                        {serie.network}
+                      </p>
+                      <p class="text-gray-500 text-xs">
+                        {serie.genre?.slice(0, 2).join(", ")}
+                      </p>
+                    </div>
+                    <span
+                      class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${
+                        serie.status === "ongoing"
+                          ? "bg-green-900 text-green-200"
+                          : serie.status === "ended"
+                            ? "bg-blue-900 text-blue-200"
+                            : "bg-red-900 text-red-200"
+                      }`}
+                    >
+                      {serie.status === "ongoing"
+                        ? "En emisión"
+                        : serie.status === "ended"
+                          ? "Finalizada"
+                          : "Cancelada"}
+                    </span>
+                  </div>
+                  
+                  <div class="flex justify-between items-center text-xs text-gray-400 mb-3">
+                    <span>
+                      {serie.startYear}
+                      {serie.endYear && ` - ${serie.endYear}`}
+                    </span>
+                    <div class="flex gap-3">
+                      <span>⭐ {serie.imdbRating}/10</span>
+                      <span>📺 {serie.totalSeasons}T / {serie.totalEpisodes}E</span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-2 mb-3">
+                    {serie.platforms && serie.platforms.slice(0, 4).map((platform: any) => (
+                      <span class="bg-gray-100 px-2 py-1 rounded-md text-xs font-medium">
+                        {platform.name}
+                        {platform.isPremium && ' 💎'}
+                      </span>
+                    ))}
+                    {serie.platforms && serie.platforms.length > 4 && (
+                      <span class="text-xs text-gray-500">+{serie.platforms.length - 4}</span>
+                    )}
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      data-action="edit"
+                      data-id={serie._id}
+                      class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      data-action="delete"
+                      data-id={serie._id}
+                      data-title={serie.title}
+                      class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                    >
+                      Eliminar
+                    </button>
+                    <a
+                      href={`/series/${serie.slug}`}
+                      target="_blank"
+                      class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                    >
+                      Ver
+                    </a>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )
@@ -466,6 +594,150 @@ try {
               </div>
             </div>
 
+            <!-- Campo Plataformas -->
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-2">
+                Plataformas donde está disponible
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-netflix"
+                    data-platform="Netflix"
+                    class="w-4 h-4 text-red-600 bg-gray-700 border-gray-600 rounded focus:ring-red-500"
+                  />
+                  <label for="platform-netflix" class="text-sm text-gray-300">
+                    Netflix
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-hbo"
+                    data-platform="HBO Max"
+                    class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                  />
+                  <label for="platform-hbo" class="text-sm text-gray-300">
+                    HBO Max
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-prime"
+                    data-platform="Prime Video"
+                    class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                  />
+                  <label for="platform-prime" class="text-sm text-gray-300">
+                    Prime Video
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-disney"
+                    data-platform="Disney+"
+                    class="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-400"
+                  />
+                  <label for="platform-disney" class="text-sm text-gray-300">
+                    Disney+
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-apple"
+                    data-platform="Apple TV+"
+                    class="w-4 h-4 text-gray-500 bg-gray-700 border-gray-600 rounded focus:ring-gray-400"
+                  />
+                  <label for="platform-apple" class="text-sm text-gray-300">
+                    Apple TV+
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-paramount"
+                    data-platform="Paramount+"
+                    class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                  />
+                  <label for="platform-paramount" class="text-sm text-gray-300">
+                    Paramount+
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-peacock"
+                    data-platform="Peacock"
+                    class="w-4 h-4 text-yellow-600 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500"
+                  />
+                  <label for="platform-peacock" class="text-sm text-gray-300">
+                    Peacock
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-hulu"
+                    data-platform="Hulu"
+                    class="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
+                  />
+                  <label for="platform-hulu" class="text-sm text-gray-300">
+                    Hulu
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-max"
+                    data-platform="Max"
+                    class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                  />
+                  <label for="platform-max" class="text-sm text-gray-300">
+                    Max
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-starz"
+                    data-platform="Starz"
+                    class="w-4 h-4 text-black bg-gray-700 border-gray-600 rounded focus:ring-gray-500"
+                  />
+                  <label for="platform-starz" class="text-sm text-gray-300">
+                    Starz
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-showtime"
+                    data-platform="Showtime"
+                    class="w-4 h-4 text-red-600 bg-gray-700 border-gray-600 rounded focus:ring-red-500"
+                  />
+                  <label for="platform-showtime" class="text-sm text-gray-300">
+                    Showtime
+                  </label>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="platform-other"
+                    data-platform="Otro"
+                    class="w-4 h-4 text-gray-600 bg-gray-700 border-gray-600 rounded focus:ring-gray-500"
+                  />
+                  <label for="platform-other" class="text-sm text-gray-300">
+                    Otro
+                  </label>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">
+                Selecciona todas las plataformas donde está disponible la serie
+              </p>
+            </div>
+
             <div
               class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-700"
             >
@@ -561,6 +833,22 @@ try {
         document.getElementById("editLgbtqContent").checked =
           serieData.lgbtqContent || false;
 
+        // Limpiar y seleccionar plataformas
+        document.querySelectorAll('[data-platform]').forEach(function(checkbox) {
+          if (checkbox instanceof HTMLInputElement) {
+            checkbox.checked = false;
+          }
+        });
+        
+        if (serieData.platforms && Array.isArray(serieData.platforms)) {
+          serieData.platforms.forEach(function(platform) {
+            const checkbox = document.querySelector('[data-platform="' + platform.name + '"]');
+            if (checkbox instanceof HTMLInputElement) {
+              checkbox.checked = true;
+            }
+          });
+        }
+
         // Mostrar modal
         document.getElementById("editModal").classList.remove("hidden");
         document.getElementById("editModal").style.display = "flex";
@@ -619,6 +907,18 @@ try {
             .map((g) => g.trim())
             .filter((g) => g.length > 0);
 
+          // Procesar plataformas seleccionadas
+          const selectedPlatforms = [];
+          document.querySelectorAll('[data-platform]').forEach(checkbox => {
+            if (checkbox instanceof HTMLInputElement && checkbox.checked) {
+              selectedPlatforms.push({
+                name: checkbox.dataset.platform,
+                available: true,
+                isPremium: true // Por defecto, todas las plataformas de streaming son premium
+              });
+            }
+          });
+
           const data = {
             id: document.getElementById("editId").value,
             title: document.getElementById("editTitle").value,
@@ -645,6 +945,7 @@ try {
             backdropUrl: document.getElementById("editBackdropUrl").value,
             trailerUrl: document.getElementById("editTrailerUrl").value,
             lgbtqContent: document.getElementById("editLgbtqContent").checked,
+            platforms: selectedPlatforms,
           };
 
           fetch("/api/series", {

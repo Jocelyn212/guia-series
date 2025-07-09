@@ -338,8 +338,8 @@ export default function SerieCard({
         {/* Platforms */}
         <div className="mb-4">
           <p className="text-xs text-gray-500 mb-2">Disponible en:</p>
-          <div className="flex flex-wrap gap-2">
-            {platforms.slice(0, 3).map((platform, index) => {
+          <div className="flex flex-wrap gap-2 items-center">
+            {platforms.slice(0, 4).map((platform, index) => {
               // URLs de las plataformas principales
               const platformUrls: Record<string, string> = {
                 'Netflix': 'https://www.netflix.com',
@@ -348,8 +348,13 @@ export default function SerieCard({
                 'Amazon Prime Video': 'https://www.primevideo.com',
                 'Disney+': 'https://www.disneyplus.com',
                 'Apple TV+': 'https://tv.apple.com',
-                'FOX': 'https://www.fox.com',
+                'Paramount+': 'https://www.paramountplus.com',
+                'Peacock': 'https://www.peacocktv.com',
+                'Hulu': 'https://www.hulu.com',
+                'Max': 'https://www.max.com',
+                'Starz': 'https://www.starz.com',
                 'Showtime': 'https://www.showtime.com',
+                'FOX': 'https://www.fox.com',
                 'FX': 'https://www.fxnetworks.com',
                 'AMC': 'https://www.amc.com'
               }
@@ -362,34 +367,27 @@ export default function SerieCard({
                   href={platformUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`px-2 py-1 rounded-md text-xs font-medium transition-all duration-200 hover:scale-105 hover:shadow-md ${
-                    platform.isPremium 
-                      ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' 
-                      : 'bg-green-100 text-green-800 hover:bg-green-200'
-                  }`}
-                  onClick={(e) => e.stopPropagation()} // Prevenir que se active el clic del card
-                  title={`Ver en ${platform.name}`}
+                  className="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-md text-xs font-medium transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                  title={`Ver en ${platform.name}${platform.isPremium ? ' (Premium)' : ''}`}
                 >
                   {platform.name}
                   {platform.isPremium && ' 💎'}
                 </a>
               ) : (
                 <span 
-                  key={index}
-                  className={`px-2 py-1 rounded-md text-xs font-medium ${
-                    platform.isPremium 
-                      ? 'bg-purple-100 text-purple-800' 
-                      : 'bg-green-100 text-green-800'
-                  }`}
+                  key={index} 
+                  className="bg-gray-100 px-2 py-1 rounded-md text-xs font-medium"
+                  title={`${platform.name}${platform.isPremium ? ' (Premium)' : ''}`}
                 >
                   {platform.name}
                   {platform.isPremium && ' 💎'}
                 </span>
               )
             })}
-            {platforms.length > 3 && (
-              <span className="text-xs text-gray-500 px-2 py-1">
-                +{platforms.length - 3} más
+            {platforms.length > 4 && (
+              <span className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded-md">
+                +{platforms.length - 4} más
               </span>
             )}
           </div>

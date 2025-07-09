@@ -7,14 +7,6 @@ export const PUT: APIRoute = async ({ request }) => {
     await connectMongoDB();
     const data = await request.json();
     
-    // Log para debugging
-    console.log('📝 Datos recibidos para actualización:', {
-      id: data.id,
-      title: data.title,
-      trailerUrl: data.trailerUrl,
-      hasTrailerUrl: !!data.trailerUrl
-    });
-    
     // Validar que el ID esté presente
     if (!data.id) {
       return new Response(JSON.stringify({ 
@@ -55,15 +47,9 @@ export const PUT: APIRoute = async ({ request }) => {
       backdropUrl: data.backdropUrl || '',
       trailerUrl: data.trailerUrl || '',
       lgbtqContent: Boolean(data.lgbtqContent),
+      platforms: Array.isArray(data.platforms) ? data.platforms : [],
       updatedAt: new Date()
     };
-
-    // Log para debugging
-    console.log('🔄 Datos que se van a actualizar:', {
-      id: data.id,
-      trailerUrl: updateData.trailerUrl,
-      hasTrailerUrl: !!updateData.trailerUrl
-    });
 
     // Usar la conexión directa de mongoose
     const SerieModel = mongoose.models.Serie || mongoose.model('Serie', new mongoose.Schema({}, { collection: 'series' }));
@@ -90,10 +76,6 @@ export const PUT: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-
-    // Verificar que la actualización fue exitosa
-    const updatedSerie = await SerieModel.findById(data.id);
-    console.log('✅ Serie actualizada - trailerUrl:', updatedSerie?.trailerUrl);
 
     return new Response(JSON.stringify({ 
       success: true, 

@@ -3,22 +3,7 @@ import { getServerAuthUser } from "./auth";
 import { getPublicAuthUser } from "./publicAuth";
 
 export function protectAdminPage(request: Request) {
-  // BLOQUEO 1: Verificar que no sea un usuario público intentando acceder
-  const publicUser = getPublicAuthUser(request);
-  
-  if (publicUser) {
-    return new Response(
-      "Acceso Denegado - No tienes permisos para acceder al panel administrativo",
-      {
-        status: 403,
-        headers: {
-          "Content-Type": "text/plain; charset=utf-8",
-        },
-      }
-    );
-  }
-
-  // BLOQUEO 2: Verificar autenticación de administrador
+  // Verificar autenticación de administrador
   const adminUser = getServerAuthUser(request);
   
   if (!adminUser || adminUser.role !== "admin") {

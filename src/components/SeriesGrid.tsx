@@ -46,10 +46,10 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
     }
 
     const searchResults = currentFilter.filter(serie =>
-      serie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      serie.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      serie.genre.some(g => g.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      serie.network.toLowerCase().includes(searchQuery.toLowerCase())
+      (serie.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (serie.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (serie.genre || []).some(g => (g || '').toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (serie.network || '').toLowerCase().includes(searchQuery.toLowerCase())
     )
     
     setFilteredSeries(searchResults)
@@ -60,10 +60,10 @@ export default function SeriesGrid({ initialSeries, userFavorites = [], userWatc
     // Si hay búsqueda activa, aplicarla sobre los nuevos resultados filtrados
     if (searchQuery.trim()) {
       const searchResults = series.filter(serie =>
-        serie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        serie.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        serie.genre.some(g => g.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        serie.network.toLowerCase().includes(searchQuery.toLowerCase())
+        (serie.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (serie.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (serie.genre || []).some(g => (g || '').toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (serie.network || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
       setFilteredSeries(searchResults)
     } else {

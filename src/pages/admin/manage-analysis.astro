@@ -30,23 +30,23 @@ try {
   <body class="bg-gray-900 min-h-screen">
     <div class="container mx-auto px-4 py-8">
       <!-- Header -->
-      <div class="flex justify-between items-center mb-8">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 class="text-3xl font-bold text-white mb-2">Gestionar Análisis</h1>
-          <p class="text-gray-400">
+          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Gestionar Análisis</h1>
+          <p class="text-gray-400 text-sm sm:text-base">
             Edita, elimina y administra los análisis existentes
           </p>
         </div>
-        <div class="flex gap-4">
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
           <a
             href="/admin/add-analysis"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-center"
           >
             + Nuevo Análisis
           </a>
           <a
             href="/admin"
-            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-center"
           >
             ← Volver
           </a>
@@ -54,26 +54,26 @@ try {
       </div>
 
       <!-- Estadísticas -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <h3 class="text-sm font-medium text-gray-400 mb-2">Total Análisis</h3>
-          <p class="text-3xl font-bold text-white">{analysis.length}</p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">Total Análisis</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-white">{analysis.length}</p>
         </div>
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <h3 class="text-sm font-medium text-gray-400 mb-2">Publicados</h3>
-          <p class="text-3xl font-bold text-green-400">
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">Publicados</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-green-400">
             {analysis.filter((a) => a.status === "published").length}
           </p>
         </div>
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <h3 class="text-sm font-medium text-gray-400 mb-2">Borradores</h3>
-          <p class="text-3xl font-bold text-yellow-400">
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">Borradores</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-yellow-400">
             {analysis.filter((a) => a.status === "draft").length}
           </p>
         </div>
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-          <h3 class="text-sm font-medium text-gray-400 mb-2">Total Vistas</h3>
-          <p class="text-3xl font-bold text-blue-400">
+        <div class="bg-gray-800 p-4 sm:p-6 rounded-lg border border-gray-700">
+          <h3 class="text-xs sm:text-sm font-medium text-gray-400 mb-2">Total Vistas</h3>
+          <p class="text-2xl sm:text-3xl font-bold text-blue-400">
             {analysis.reduce((sum, a) => sum + (a.views || 0), 0)}
           </p>
         </div>
@@ -95,7 +95,8 @@ try {
           <div class="bg-red-500 text-white p-4 rounded-lg mb-6">{error}</div>
         ) : (
           <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-            <div class="overflow-x-auto">
+            <!-- Vista de escritorio -->
+            <div class="hidden md:block overflow-x-auto">
               <table class="w-full">
                 <thead class="bg-gray-700">
                   <tr>
@@ -189,7 +190,7 @@ try {
                             Eliminar
                           </button>
                           <a
-                            href={`/analisis#${analisis.slug}`}
+                            href={`/analisis/${analisis.slug}`}
                             target="_blank"
                             class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                           >
@@ -201,6 +202,86 @@ try {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <!-- Vista móvil -->
+            <div class="md:hidden divide-y divide-gray-700" id="analysisTableMobile">
+              {analysis.map((analisis) => (
+                <div
+                  class="p-4 analysis-row"
+                  data-analysis={JSON.stringify(analisis)}
+                >
+                  <div class="flex justify-between items-start mb-3">
+                    <div class="flex-1">
+                      <h3 class="text-white font-medium text-sm leading-tight">
+                        {analisis.title}
+                      </h3>
+                      <p class="text-gray-400 text-xs mt-1">
+                        {analisis.excerpt
+                          ? analisis.excerpt.substring(0, 80) + "..."
+                          : "Sin extracto"}
+                      </p>
+                    </div>
+                    <span
+                      class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-3 ${
+                        analisis.status === "published"
+                          ? "bg-green-900 text-green-200"
+                          : "bg-yellow-900 text-yellow-200"
+                      }`}
+                    >
+                      {analisis.status === "published"
+                        ? "Publicado"
+                        : "Borrador"}
+                    </span>
+                  </div>
+                  
+                  <div class="flex justify-between items-center text-xs text-gray-400 mb-3">
+                    <span>
+                      {new Date(analisis.createdAt).toLocaleDateString("es-ES")}
+                    </span>
+                    <div class="flex gap-3">
+                      <span>👁 {analisis.views || 0}</span>
+                      <span>❤️ {analisis.likes || 0}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-1 mb-3">
+                    {analisis.tags &&
+                      analisis.tags
+                        .slice(0, 2)
+                        .map((tag: string) => (
+                          <span class="bg-blue-900 text-blue-200 px-2 py-1 text-xs rounded">
+                            {tag}
+                          </span>
+                        ))}
+                  </div>
+                  
+                  <div class="flex gap-2">
+                    <button
+                      data-action="edit"
+                      data-id={analisis._id}
+                      class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      data-action="delete"
+                      data-id={analisis._id}
+                      data-title={analisis.title}
+                      class="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors"
+                    >
+                      Eliminar
+                    </button>
+                    <a
+                      href={`/analisis/${analisis.slug}`}
+                      target="_blank"
+                      class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-xs font-medium transition-colors text-center"
+                    >
+                      Ver
+                    </a>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )
@@ -253,8 +334,8 @@ try {
           alert("Error: ID de análisis no válido");
           return;
         }
-        // Por ahora solo mostrar alerta, luego se puede implementar modal
-        alert(`Función de edición para análisis ID: ${id} - Por implementar`);
+        // Redirigir a la página de edición
+        window.location.href = `/admin/edit-analysis?id=${id}`;
       }
 
       function deleteAnalysis(id, title) {

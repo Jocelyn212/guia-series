@@ -216,6 +216,9 @@ let EpisodeModel: Model<Episode>;
 let AnalisisModel: Model<Analisis>;
 let UserModel: Model<User>;
 
+// Exportar AnalisisModel para uso en APIs
+export { AnalisisModel };
+
 let isConnected = false;
 
 export async function connectMongoDB() {
@@ -1071,5 +1074,22 @@ export async function removeUserWatchlistSerie(
   } catch (error) {
     console.error("Error removing from watchlist:", error);
     return false;
+  }
+}
+
+// Obtener análisis por ID
+export async function getAnalisisById(
+  id: string
+): Promise<Analisis | null> {
+  try {
+    await connectMongoDB();
+    if (!AnalisisModel) return null;
+    const result = await AnalisisModel.findById(id)
+      .lean()
+      .exec();
+    return result;
+  } catch (error) {
+    console.error("Error fetching analysis by ID:", error);
+    return null;
   }
 }

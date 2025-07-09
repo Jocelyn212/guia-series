@@ -347,6 +347,149 @@ const user = protectAdminPage(Astro.request);
             </div>
           </div>
 
+          <!-- Plataformas -->
+          <div class="pb-6">
+            <h3 class="text-lg font-medium text-white mb-4">Plataformas</h3>
+            <p class="text-sm text-gray-400 mb-4">
+              Selecciona todas las plataformas donde está disponible la serie
+            </p>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-netflix"
+                  data-platform="Netflix"
+                  class="w-4 h-4 text-red-600 bg-gray-700 border-gray-600 rounded focus:ring-red-500"
+                />
+                <label for="platform-netflix" class="text-sm text-gray-300">
+                  Netflix
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-hbo"
+                  data-platform="HBO Max"
+                  class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                />
+                <label for="platform-hbo" class="text-sm text-gray-300">
+                  HBO Max
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-prime"
+                  data-platform="Prime Video"
+                  class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <label for="platform-prime" class="text-sm text-gray-300">
+                  Prime Video
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-disney"
+                  data-platform="Disney+"
+                  class="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded focus:ring-blue-400"
+                />
+                <label for="platform-disney" class="text-sm text-gray-300">
+                  Disney+
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-apple"
+                  data-platform="Apple TV+"
+                  class="w-4 h-4 text-gray-500 bg-gray-700 border-gray-600 rounded focus:ring-gray-400"
+                />
+                <label for="platform-apple" class="text-sm text-gray-300">
+                  Apple TV+
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-paramount"
+                  data-platform="Paramount+"
+                  class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                />
+                <label for="platform-paramount" class="text-sm text-gray-300">
+                  Paramount+
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-peacock"
+                  data-platform="Peacock"
+                  class="w-4 h-4 text-yellow-600 bg-gray-700 border-gray-600 rounded focus:ring-yellow-500"
+                />
+                <label for="platform-peacock" class="text-sm text-gray-300">
+                  Peacock
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-hulu"
+                  data-platform="Hulu"
+                  class="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500"
+                />
+                <label for="platform-hulu" class="text-sm text-gray-300">
+                  Hulu
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-max"
+                  data-platform="Max"
+                  class="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                />
+                <label for="platform-max" class="text-sm text-gray-300">
+                  Max
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-starz"
+                  data-platform="Starz"
+                  class="w-4 h-4 text-black bg-gray-700 border-gray-600 rounded focus:ring-gray-500"
+                />
+                <label for="platform-starz" class="text-sm text-gray-300">
+                  Starz
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-showtime"
+                  data-platform="Showtime"
+                  class="w-4 h-4 text-red-600 bg-gray-700 border-gray-600 rounded focus:ring-red-500"
+                />
+                <label for="platform-showtime" class="text-sm text-gray-300">
+                  Showtime
+                </label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="platform-other"
+                  data-platform="Otro"
+                  class="w-4 h-4 text-gray-600 bg-gray-700 border-gray-600 rounded focus:ring-gray-500"
+                />
+                <label for="platform-other" class="text-sm text-gray-300">
+                  Otro
+                </label>
+              </div>
+            </div>
+          </div>
+
           <!-- Botones -->
           <div class="flex justify-end space-x-4 pt-6 border-t border-gray-700">
             <button
@@ -422,6 +565,21 @@ const user = protectAdminPage(Astro.request);
           if (!(form instanceof HTMLFormElement)) return;
 
           const formData = new FormData(form);
+          
+          // Procesar plataformas seleccionadas
+          var selectedPlatforms = [];
+          var platformCheckboxes = document.querySelectorAll('[data-platform]');
+          for (var i = 0; i < platformCheckboxes.length; i++) {
+            var checkbox = platformCheckboxes[i];
+            if (checkbox instanceof HTMLInputElement && checkbox.checked) {
+              selectedPlatforms.push({
+                name: checkbox.dataset.platform,
+                available: true,
+                isPremium: true
+              });
+            }
+          }
+          
           const data = {
             title: formData.get("title") || "",
             slug: formData.get("slug") || "",
@@ -451,7 +609,7 @@ const user = protectAdminPage(Astro.request);
             posterUrl: formData.get("posterUrl") || "",
             backdropUrl: formData.get("backdropUrl") || "",
             lgbtqContent: formData.get("lgbtqContent") === "on", // Convertir checkbox a boolean
-            platforms: [],
+            platforms: selectedPlatforms,
           };
 
           fetch("/api/series", {
